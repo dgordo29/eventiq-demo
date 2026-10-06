@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventIQ Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0d12; --surface: #12151e; --surface2: #1a1e2a; --border: #252b3b;
+  --accent: #7c6cff; --teal: #00d4aa; --danger: #ff4757; --success: #2ed573;
+  --fg: #e2e5ef; --fg-dim: #7a8299; --fg-muted: #3a3f52;
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { visibility: hidden; }
+html.ready { visibility: visible; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 14px;
+  min-height: 100vh; padding-block: 0 40px; padding-inline: 16px;
+  background-image:
+    linear-gradient(rgba(124,108,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,108,255,0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.top { max-width: 760px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 18px; }
+.logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; text-decoration: none;
+  background: linear-gradient(135deg, var(--accent), var(--teal)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.top-actions { display: flex; gap: 10px; align-items: center; }
+.ghost { background: none; border: 1px solid var(--border); color: var(--fg-dim); border-radius: 8px; padding: 7px 12px; font: inherit; font-size: 12px; cursor: pointer; text-decoration: none; }
+.ghost:hover { color: var(--fg); border-color: var(--fg-muted); }
+.panel { max-width: 760px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; }
+.tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--fg-dim); text-transform: uppercase; }
+h1 { font-size: 22px; font-weight: 700; margin-block: 6px 4px; }
+.sub { color: var(--fg-dim); font-size: 13px; line-height: 1.5; }
+.identity { display: flex; gap: 20px; align-items: center; padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.avatar { width: 84px; height: 84px; border-radius: 50%; flex: none; background: var(--surface2); border: 1px solid var(--border);
+  display: grid; place-items: center; overflow: hidden; font-size: 28px; font-weight: 700; color: var(--accent); }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.id-text { min-width: 0; flex: 1; }
+.id-email { font-family: var(--mono); font-size: 12px; color: var(--fg-dim); overflow-wrap: anywhere; }
+.upload { margin-top: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--fg-dim); }
+form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.full { grid-column: 1 / -1; }
+label { display: grid; gap: 6px; font-size: 12px; font-weight: 500; color: var(--fg-dim); }
+input, select, textarea {
+  width: 100%; padding: 11px 12px; background: var(--bg); color: var(--fg);
+  border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: 14px; outline: none;
+}
+textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,108,255,0.22); }
+input::placeholder, textarea::placeholder { color: var(--fg-muted); }
+.count { font-family: var(--mono); font-size: 10px; color: var(--fg-muted); justify-self: end; }
+.actions { display: flex; gap: 12px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.btn { padding: 11px 20px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.btn:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: 0.55; cursor: wait; }
+.btn:focus-visible, .ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.msg { font-size: 13px; line-height: 1.5; padding: 10px 12px; border-radius: 8px; border: 1px solid; }
+.msg[hidden] { display: none; }
+.msg.err { color: var(--danger); background: rgba(255,71,87,0.08); border-color: rgba(255,71,87,0.3); }
+.msg.ok { color: var(--success); background: rgba(46,213,115,0.08); border-color: rgba(46,213,115,0.3); }
+.meta { margin-top: 20px; font-family: var(--mono); font-size: 10px; color: var(--fg-muted); letter-spacing: 0.06em; }
+@media (max-width: 600px) { form { grid-template-columns: 1fr; } .panel { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="index.html">EventIQ</a>
+  <div class="top-actions">
+    <a class="ghost" href="index.html">Back to dashboard</a>
+    <button class="ghost" id="signout" type="button">Sign out</button>
+  </div>
+</header>
+
+<main class="panel">
+  <div class="tag">Crew profile</div>
+  <h1>Your profile</h1>
+  <p class="sub">This is how you appear to your team in the ops console.</p>
+
+  <div class="identity" style="margin-top:22px">
+    <div class="avatar" id="avatar"></div>
+    <div class="id-text">
+      <div style="font-size:17px;font-weight:600" id="disp-name">&nbsp;</div>
+      <div class="id-email" id="disp-email"></div>
+      <div class="upload">
+        <button class="ghost" type="button" id="pick">Upload photo</button>
+        <span>PNG, JPG or WebP, up to 2 MB</span>
+        <input type="file" id="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+      </div>
+    </div>
+  </div>
+
+  <form id="form" novalidate>
+    <div class="msg full" id="msg" hidden></div>
+    <label>Full name<input id="full_name" maxlength="120" autocomplete="name" placeholder="Jordan Lee"></label>
+    <label>Job title<input id="job_title" maxlength="120" autocomplete="organization-title" placeholder="Production Manager"></label>
+    <label>Company<input id="company" maxlength="120" autocomplete="organization" placeholder="Sunset Live Productions"></label>
+    <label>Phone<input id="phone" maxlength="40" type="tel" autocomplete="tel" placeholder="(561) 555-0142"></label>
+    <label>Event-day role
+      <select id="ops_role">
+        <option value="">Choose a role</option>
+        <option value="producer">Producer</option>
+        <option value="operations">Operations lead</option>
+        <option value="door">Door and capacity</option>
+        <option value="bar">Beverage and bar</option>
+        <option value="stage">Stage management</option>
+        <option value="artist_relations">Artist relations</option>
+        <option value="vip">VIP management</option>
+        <option value="security">Security</option>
+        <option value="marketing">Marketing and social</option>
+        <option value="other">Other</option>
+      </select>
+    </label>
+    <label>Time zone
+      <select id="timezone">
+        <option value="America/New_York">Eastern</option>
+        <option value="America/Chicago">Central</option>
+        <option value="America/Denver">Mountain</option>
+        <option value="America/Phoenix">Arizona</option>
+        <option value="America/Los_Angeles">Pacific</option>
+        <option value="America/Anchorage">Alaska</option>
+        <option value="Pacific/Honolulu">Hawaii</option>
+        <option value="Europe/London">London</option>
+        <option value="UTC">UTC</option>
+      </select>
+    </label>
+    <label class="full">About you<textarea id="bio" maxlength="1000" placeholder="Events you run, what your team should know about working with you."></textarea>
+      <span class="count" id="bio-count">0 / 1000</span></label>
+    <div class="actions full">
+      <button class="btn" id="save" type="submit">Save profile</button>
+    </div>
+  </form>
+  <div class="meta" id="meta"></div>
+</main>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SUPABASE_URL = 'https://eqekhzjhgplkwhliqrvn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_2WEdnHl8YjEzJg1-KAVq3w_3_6RxDAl';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+const FIELDS = ['full_name', 'job_title', 'company', 'phone', 'ops_role', 'timezone', 'bio'];
+const $ = (id) => document.getElementById(id);
+
+function toLogin() {
+  const u = new URL('login.html', location.href);
+  u.searchParams.set('next', location.pathname);
+  location.replace(u.href);
+}
+function say(text, kind = 'err') { const m = $('msg'); m.textContent = text; m.className = 'msg full ' + kind; m.hidden = false; }
+function initials(name, email) {
+  const src = (name || email || '?').trim();
+  const parts = src.split(/[\s@._-]+/).filter(Boolean);
+  return ((parts[0] || '?')[0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+}
+function paintIdentity(p) {
+  $('disp-name').textContent = p.full_name || 'Add your name';
+  $('disp-email').textContent = p.email || '';
+  const a = $('avatar');
+  a.replaceChildren();
+  if (p.avatar_url) {
+    const img = document.createElement('img');
+    img.src = p.avatar_url; img.alt = 'Profile photo';
+    a.appendChild(img);
+  } else {
+    a.textContent = initials(p.full_name, p.email);
+  }
+}
+
+const { data: { session } } = await sb.auth.getSession();
+if (!session) { toLogin(); throw new Error('signed out'); }
+const user = session.user;
+sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') toLogin(); });
+
+let profile;
+{
+  const { data, error } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+  if (error) { document.documentElement.classList.add('ready'); say('Could not load your profile: ' + error.message); }
+  profile = data;
+  if (!profile) {
+    // Account created before the profiles table existed: create the row now.
+    const seed = { id: user.id, email: user.email, full_name: user.user_metadata?.full_name || null };
+    const ins = await sb.from('profiles').insert(seed).select('*').single();
+    profile = ins.data || seed;
+  }
+}
+
+FIELDS.forEach(f => { if (profile[f] != null) $(f).value = profile[f]; });
+$('bio-count').textContent = ($('bio').value.length) + ' / 1000';
+paintIdentity(profile);
+if (profile.updated_at) $('meta').textContent = 'Last updated ' + new Date(profile.updated_at).toLocaleString();
+document.documentElement.classList.add('ready');
+
+$('bio').addEventListener('input', () => { $('bio-count').textContent = $('bio').value.length + ' / 1000'; });
+
+$('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('msg').hidden = true;
+  const patch = {};
+  FIELDS.forEach(f => { const v = $(f).value.trim(); patch[f] = v === '' ? null : v; });
+  if (!patch.timezone) patch.timezone = 'America/New_York';
+  $('save').disabled = true;
+  const { data, error } = await sb.from('profiles').update(patch).eq('id', user.id).select('*').single();
+  $('save').disabled = false;
+  if (error) return say('Could not save: ' + error.message);
+  profile = data;
+  paintIdentity(profile);
+  $('meta').textContent = 'Last updated ' + new Date(profile.updated_at).toLocaleString();
+  say('Profile saved.', 'ok');
+});
+
+$('pick').addEventListener('click', () => $('file').click());
+$('file').addEventListener('change', async () => {
+  const file = $('file').files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) return say('That photo is over 2 MB. Pick a smaller one.');
+  const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+  $('pick').disabled = true; $('pick').textContent = 'Uploading…';
+  const up = await sb.storage.from('avatars').upload(path, file, { contentType: file.type, upsert: true });
+  if (up.error) { $('pick').disabled = false; $('pick').textContent = 'Upload photo'; return say('Upload failed: ' + up.error.message); }
+  const url = sb.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+  const { data, error } = await sb.from('profiles').update({ avatar_url: url }).eq('id', user.id).select('*').single();
+  $('pick').disabled = false; $('pick').textContent = 'Upload photo';
+  $('file').value = '';
+  if (error) return say('Photo uploaded but not saved to your profile: ' + error.message);
+  profile = data; paintIdentity(profile); say('Photo updated.', 'ok');
+});
+
+$('signout').addEventListener('click', async () => { await sb.auth.signOut(); toLogin(); });
+</script>
+</body>
+</html>

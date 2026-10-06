@@ -32,6 +32,7 @@
       '.ag-chip{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-dim,#7a8299);white-space:nowrap}' +
       '.ag-email{max-width:180px;overflow:hidden;text-overflow:ellipsis}' +
       '.ag-out{font-size:12px;cursor:pointer}' +
+      '.ag-prof{font-size:12px;color:var(--accent,#7c6cff);text-decoration:none}.ag-prof:hover{text-decoration:underline}' +
       '@media (max-width:700px){.ag-email{display:none}}';
     document.head.appendChild(css);
 
@@ -50,8 +51,19 @@
       await sb.auth.signOut();
       location.replace(new URL('login.html', location.href).href);
     });
+    var prof = document.createElement('a');
+    prof.className = 'ag-prof';
+    prof.href = new URL('profile.html', location.href).href;
+    prof.textContent = 'Profile';
     chip.appendChild(email);
+    chip.appendChild(prof);
     chip.appendChild(out);
+
+    // Show the user's profile name instead of the raw email once it loads.
+    sb.from('profiles').select('full_name').eq('id', user.id).maybeSingle().then(function (r) {
+      var name = r && r.data && r.data.full_name;
+      if (name) email.textContent = name;
+    });
 
     var mount = document.querySelector('.hdr-right') || document.querySelector('header');
     if (mount) {
