@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EventIQ Profile</title>
+<script src="auth-guard.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -69,9 +70,8 @@ input::placeholder, textarea::placeholder { color: var(--fg-muted); }
 <body>
 <header class="top">
   <a class="logo" href="index.html">EventIQ</a>
-  <div class="top-actions">
+  <div class="top-actions hdr-right">
     <a class="ghost" href="index.html">Back to dashboard</a>
-    <button class="ghost" id="signout" type="button">Sign out</button>
   </div>
 </header>
 
@@ -137,19 +137,10 @@ input::placeholder, textarea::placeholder { color: var(--fg-muted); }
 </main>
 
 <script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-const SUPABASE_URL = 'https://eqekhzjhgplkwhliqrvn.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_2WEdnHl8YjEzJg1-KAVq3w_3_6RxDAl';
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+const { sb, user } = window.authContext || await new Promise(r => window.addEventListener('auth-ready', e => r(e.detail), { once: true }));
 const FIELDS = ['full_name', 'job_title', 'company', 'phone', 'ops_role', 'timezone', 'bio'];
 const $ = (id) => document.getElementById(id);
 
-function toLogin() {
-  const u = new URL('login.html', location.href);
-  u.searchParams.set('next', location.pathname);
-  location.replace(u.href);
-}
 function say(text, kind = 'err') { const m = $('msg'); m.textContent = text; m.className = 'msg full ' + kind; m.hidden = false; }
 function initials(name, email) {
   const src = (name || email || '?').trim();
@@ -169,11 +160,6 @@ function paintIdentity(p) {
     a.textContent = initials(p.full_name, p.email);
   }
 }
-
-const { data: { session } } = await sb.auth.getSession();
-if (!session) { toLogin(); throw new Error('signed out'); }
-const user = session.user;
-sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') toLogin(); });
 
 let profile;
 {
@@ -230,7 +216,6 @@ $('file').addEventListener('change', async () => {
   profile = data; paintIdentity(profile); say('Photo updated.', 'ok');
 });
 
-$('signout').addEventListener('click', async () => { await sb.auth.signOut(); toLogin(); });
 </script>
 </body>
 </html>

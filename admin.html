@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventIQ Admin</title>
+<script src="auth-guard.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0d12; --surface: #12151e; --surface2: #1a1e2a; --border: #252b3b;
+  --accent: #7c6cff; --teal: #00d4aa; --danger: #ff4757; --warning: #ffa502; --success: #2ed573;
+  --fg: #e2e5ef; --fg-dim: #7a8299; --fg-muted: #3a3f52;
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 14px; min-height: 100vh; padding-block: 0 48px; padding-inline: 16px; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 18px; flex-wrap: wrap; }
+.brand { display: flex; align-items: baseline; gap: 12px; }
+.logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; text-decoration: none;
+  background: linear-gradient(135deg, var(--accent), var(--teal)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--fg-dim); text-transform: uppercase; }
+.hdr-right { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.ghost { background: none; border: 1px solid var(--border); color: var(--fg-dim); border-radius: 8px; padding: 7px 12px; font: inherit; font-size: 12px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.ghost:hover { color: var(--fg); border-color: var(--fg-muted); }
+.ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+h1 { font-size: 24px; font-weight: 700; margin-block: 8px 4px; }
+.sub { color: var(--fg-dim); font-size: 13px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-block: 22px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.stat .n { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat .l { font-size: 11px; color: var(--fg-dim); margin-top: 2px; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.tab { background: none; border: none; color: var(--fg-dim); font: inherit; font-size: 13px; font-weight: 600; padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+input, select { padding: 8px 10px; background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: 13px; outline: none; }
+input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,108,255,0.22); }
+#q { flex: 1; min-width: 200px; }
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; min-width: 900px; }
+th { text-align: left; font-size: 10px; font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-dim); font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 13px; }
+tr:last-child td { border-bottom: none; }
+.who { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.av { width: 32px; height: 32px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); display: grid; place-items: center; overflow: hidden; font-size: 12px; font-weight: 700; color: var(--accent); flex: none; }
+.av img { width: 100%; height: 100%; object-fit: cover; }
+.nm { font-weight: 600; }
+.em { font-family: var(--mono); font-size: 11px; color: var(--fg-dim); }
+.dim { color: var(--fg-dim); }
+.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; border: 1px solid; }
+.pill.active { color: var(--success); border-color: rgba(46,213,115,0.35); }
+.pill.suspended { color: var(--danger); border-color: rgba(255,71,87,0.35); }
+.pill.unconf { color: var(--warning); border-color: rgba(255,165,2,0.35); margin-left: 6px; }
+.you { font-size: 10px; font-family: var(--mono); color: var(--teal); margin-left: 6px; }
+.danger { color: var(--danger); border-color: rgba(255,71,87,0.4); }
+.msg { font-size: 13px; line-height: 1.5; padding: 10px 12px; border-radius: 8px; border: 1px solid; margin-bottom: 12px; }
+.msg.err { color: var(--danger); background: rgba(255,71,87,0.08); border-color: rgba(255,71,87,0.3); }
+.msg.ok { color: var(--success); background: rgba(46,213,115,0.08); border-color: rgba(46,213,115,0.3); }
+.log { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.log-row { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.log-row:last-child { border-bottom: none; }
+.log-time { font-family: var(--mono); font-size: 11px; color: var(--fg-dim); }
+.empty { padding: 28px; text-align: center; color: var(--fg-dim); }
+.denied { max-width: 460px; margin: 80px auto; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+.legend { font-size: 12px; color: var(--fg-dim); margin-top: 14px; line-height: 1.6; }
+@media (max-width: 600px) { .log-row { grid-template-columns: 1fr; gap: 4px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><a class="logo" href="index.html">EventIQ</a><span class="tag">Admin console</span></div>
+    <div class="hdr-right"><a class="ghost" href="index.html">Back to dashboard</a></div>
+  </header>
+
+  <div id="denied" class="denied" hidden>
+    <h1>Admins only</h1>
+    <p class="sub" style="margin-top:8px">Your account doesn't have admin access. Ask an EventIQ admin if you need it.</p>
+    <p style="margin-top:18px"><a class="ghost" href="index.html">Back to dashboard</a></p>
+  </div>
+
+  <main id="app" hidden>
+    <h1>Team and access</h1>
+    <p class="sub">Manage who can use EventIQ, what they can do, and review admin activity.</p>
+
+    <section class="stats" id="stats"></section>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-tab="users">Users</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="log">Activity log</button>
+    </div>
+
+    <div id="msg" class="msg" hidden></div>
+
+    <section id="tab-users">
+      <div class="toolbar">
+        <input id="q" type="search" placeholder="Search name, email, company">
+        <select id="f-role"><option value="">All roles</option><option value="admin">Admin</option><option value="manager">Manager</option><option value="member">Member</option></select>
+        <select id="f-status"><option value="">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option></select>
+        <button class="ghost" id="refresh" type="button">Refresh</button>
+        <button class="ghost" id="export" type="button">Export CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>User</th><th>Title and company</th><th>Event role</th><th>Access</th><th>Status</th><th>Joined</th><th>Last sign-in</th><th></th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <p class="legend">Admin: full access, including this console. Manager: reserved for event-level controls as they're added. Member: standard crew access. Suspended users are signed out and can't get back in until reactivated.</p>
+    </section>
+
+    <section id="tab-log" hidden>
+      <div class="log" id="log"></div>
+    </section>
+  </main>
+</div>
+
+<script type="module">
+const { sb, user, profile } = window.authContext || await new Promise(r => window.addEventListener('auth-ready', e => r(e.detail), { once: true }));
+const $ = (id) => document.getElementById(id);
+const ROLE_LABEL = { admin: 'Admin', manager: 'Manager', member: 'Member' };
+const OPS_LABEL = { producer: 'Producer', operations: 'Operations lead', door: 'Door and capacity', bar: 'Beverage and bar', stage: 'Stage management', artist_relations: 'Artist relations', vip: 'VIP management', security: 'Security', marketing: 'Marketing and social', other: 'Other' };
+let users = [];
+
+if (!profile || profile.app_role !== 'admin') {
+  $('denied').hidden = false;
+  throw new Error('not admin');
+}
+$('app').hidden = false;
+
+function say(text, kind = 'err') { const m = $('msg'); m.textContent = text; m.className = 'msg ' + kind; m.hidden = false; clearTimeout(say.t); say.t = setTimeout(() => { m.hidden = true; }, 6000); }
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never';
+const fmtTime = (d) => d ? new Date(d).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Never';
+function initials(n, e) { const p = (n || e || '?').split(/[\s@._-]+/).filter(Boolean); return ((p[0] || '?')[0] + (p[1] ? p[1][0] : '')).toUpperCase(); }
+function el(tag, props = {}, ...kids) { const n = document.createElement(tag); Object.assign(n, props); kids.flat().forEach(k => n.append(k)); return n; }
+
+function renderStats() {
+  const week = Date.now() - 7 * 864e5;
+  const s = [
+    [users.length, 'Total users'],
+    [users.filter(u => u.last_sign_in_at && new Date(u.last_sign_in_at) > week).length, 'Signed in, last 7 days'],
+    [users.filter(u => new Date(u.created_at) > week).length, 'New this week'],
+    [users.filter(u => u.app_role === 'admin').length, 'Admins'],
+    [users.filter(u => !u.email_confirmed_at).length, 'Email not confirmed'],
+    [users.filter(u => u.status === 'suspended').length, 'Suspended'],
+  ];
+  $('stats').replaceChildren(...s.map(([n, l]) => el('div', { className: 'stat' }, el('div', { className: 'n', textContent: n }), el('div', { className: 'l', textContent: l }))));
+}
+
+function filtered() {
+  const q = $('q').value.trim().toLowerCase(), r = $('f-role').value, st = $('f-status').value;
+  return users.filter(u => (!r || u.app_role === r) && (!st || u.status === st) &&
+    (!q || [u.full_name, u.email, u.company, u.job_title].some(v => (v || '').toLowerCase().includes(q))));
+}
+
+function renderRows() {
+  const list = filtered();
+  if (!list.length) { $('rows').replaceChildren(el('tr', {}, el('td', { colSpan: 8, className: 'empty', textContent: 'No users match.' }))); return; }
+  $('rows').replaceChildren(...list.map(u => {
+    const me = u.id === user.id;
+    const av = el('div', { className: 'av' });
+    if (u.avatar_url) av.append(el('img', { src: u.avatar_url, alt: '' })); else av.textContent = initials(u.full_name, u.email);
+    const name = el('div', { className: 'nm', textContent: u.full_name || 'No name yet' });
+    if (me) name.append(el('span', { className: 'you', textContent: 'YOU' }));
+    const who = el('div', { className: 'who' }, av, el('div', { style: 'min-width:0' }, name, el('div', { className: 'em', textContent: u.email })));
+
+    const roleSel = el('select');
+    roleSel.setAttribute('aria-label', 'Access role for ' + u.email);
+    ['admin', 'manager', 'member'].forEach(r => roleSel.append(el('option', { value: r, textContent: ROLE_LABEL[r], selected: u.app_role === r })));
+    roleSel.addEventListener('change', async () => {
+      const next = roleSel.value, prev = u.app_role;
+      roleSel.disabled = true;
+      const { error } = await sb.rpc('admin_set_role', { target: u.id, new_role: next });
+      roleSel.disabled = false;
+      if (error) { roleSel.value = prev; return say(error.message); }
+      u.app_role = next; renderStats(); say(`${u.email} is now ${ROLE_LABEL[next]}.`, 'ok'); loadLog();
+    });
+
+    const status = el('td', {}, el('span', { className: 'pill ' + u.status, textContent: u.status === 'active' ? 'Active' : 'Suspended' }));
+    if (!u.email_confirmed_at) status.append(el('span', { className: 'pill unconf', textContent: 'Unconfirmed' }));
+
+    const act = el('button', { type: 'button', className: 'ghost' + (u.status === 'active' ? ' danger' : '') });
+    act.textContent = u.status === 'active' ? 'Suspend' : 'Reactivate';
+    if (me) { act.disabled = true; act.title = "You can't suspend your own account"; }
+    let armed = false, timer;
+    act.addEventListener('click', async () => {
+      if (u.status === 'active' && !armed) {
+        armed = true; act.textContent = 'Confirm suspend';
+        timer = setTimeout(() => { armed = false; act.textContent = 'Suspend'; }, 4000);
+        return;
+      }
+      clearTimeout(timer);
+      const next = u.status === 'active' ? 'suspended' : 'active';
+      act.disabled = true;
+      const { error } = await sb.rpc('admin_set_status', { target: u.id, new_status: next });
+      act.disabled = false;
+      if (error) { armed = false; act.textContent = u.status === 'active' ? 'Suspend' : 'Reactivate'; return say(error.message); }
+      u.status = next; renderStats(); renderRows(); loadLog();
+      say(next === 'suspended' ? `${u.email} is suspended and will be signed out.` : `${u.email} is active again.`, 'ok');
+    });
+
+    return el('tr', {},
+      el('td', {}, who),
+      el('td', {}, el('div', { textContent: u.job_title || '' }), el('div', { className: 'dim', textContent: u.company || '' })),
+      el('td', { className: 'dim', textContent: OPS_LABEL[u.ops_role] || '' }),
+      el('td', {}, roleSel),
+      status,
+      el('td', { className: 'num dim', textContent: fmtDate(u.created_at) }),
+      el('td', { className: 'num dim', textContent: fmtTime(u.last_sign_in_at) }),
+      el('td', {}, act));
+  }));
+}
+
+async function loadUsers() {
+  const { data, error } = await sb.rpc('admin_list_users');
+  if (error) return say('Could not load users: ' + error.message);
+  users = data || [];
+  renderStats(); renderRows();
+}
+
+function describe(e) {
+  const t = e.target_email || 'a user', a = e.actor_email || 'Someone', d = e.details || {};
+  switch (e.action) {
+    case 'role_changed': return `${a} changed ${t} from ${ROLE_LABEL[d.from] || d.from} to ${ROLE_LABEL[d.to] || d.to}` + (d.note ? ` (${d.note})` : '');
+    case 'user_suspended': return `${a} suspended ${t}`;
+    case 'user_reactivated': return `${a} reactivated ${t}`;
+    case 'user_signed_up': return `${t} created an account`;
+    default: return `${a}: ${e.action} ${t}`;
+  }
+}
+
+async function loadLog() {
+  const { data, error } = await sb.from('audit_log').select('*').order('created_at', { ascending: false }).limit(200);
+  if (error) { $('log').replaceChildren(el('div', { className: 'empty', textContent: 'Could not load activity: ' + error.message })); return; }
+  if (!data.length) { $('log').replaceChildren(el('div', { className: 'empty', textContent: 'No activity yet.' })); return; }
+  $('log').replaceChildren(...data.map(e => el('div', { className: 'log-row' },
+    el('div', { className: 'log-time', textContent: fmtTime(e.created_at) }), el('div', { textContent: describe(e) }))));
+}
+
+function exportCsv() {
+  const cols = ['full_name', 'email', 'job_title', 'company', 'phone', 'ops_role', 'app_role', 'status', 'created_at', 'last_sign_in_at', 'email_confirmed_at'];
+  const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csv = [cols.join(','), ...filtered().map(u => cols.map(c => esc(u[c])).join(','))].join('\n');
+  const a = el('a', { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `eventiq-users-${new Date().toISOString().slice(0, 10)}.csv` });
+  document.body.append(a); a.click(); a.remove();
+}
+
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+  $('tab-users').hidden = b.dataset.tab !== 'users';
+  $('tab-log').hidden = b.dataset.tab !== 'log';
+}));
+['q', 'f-role', 'f-status'].forEach(id => $(id).addEventListener('input', renderRows));
+$('refresh').addEventListener('click', () => { loadUsers(); loadLog(); });
+$('export').addEventListener('click', exportCsv);
+
+await Promise.all([loadUsers(), loadLog()]);
+</script>
+</body>
+</html>

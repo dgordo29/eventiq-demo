@@ -197,6 +197,10 @@ sb.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' && session && !recovering) goHome();
 });
 
+if (new URLSearchParams(location.search).get('reason') === 'suspended') {
+  say('msg-signin', 'This account has been suspended. Contact your EventIQ admin to restore access.');
+}
+
 // Already signed in? Skip the form.
 const { data: { session } } = await sb.auth.getSession();
 if (session && !location.hash.includes('type=recovery')) goHome();

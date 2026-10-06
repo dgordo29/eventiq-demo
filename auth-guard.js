@@ -2,8 +2,12 @@
  * auth-guard.js
  * Load this with a plain <script src="auth-guard.js"></script> near the top of any page
  * that should require sign-in. It hides the page, checks the Supabase session, and either
- * reveals the page (adding a signed-in chip with a Sign out button) or sends the visitor
- * to login.html.
+ * reveals the page (adding a signed-in chip with Profile, Admin and Sign out) or sends the
+ * visitor to login.html. Suspended accounts are signed out.
+ *
+ * Pages that need the client or the user's profile can listen for the 'auth-ready' event:
+ *   window.addEventListener('auth-ready', e => { const { sb, user, profile } = e.detail; ... });
+ * or read window.authContext if it is already set.
  */
 (function () {
   var SUPABASE_URL = 'https://eqekhzjhgplkwhliqrvn.supabase.co';
@@ -16,8 +20,9 @@
   hide.textContent = 'html{visibility:hidden}';
   document.head.appendChild(hide);
 
-  function toLogin() {
+  function toLogin(reason) {
     LOGIN.searchParams.set('next', location.pathname + location.search);
+    if (reason) LOGIN.searchParams.set('reason', reason);
     location.replace(LOGIN.href);
   }
 
@@ -26,22 +31,34 @@
     if (s) s.remove();
   }
 
-  function addChip(sb, user) {
+  function link(text, href, cls) {
+    var a = document.createElement('a');
+    a.className = cls;
+    a.href = new URL(href, location.href).href;
+    a.textContent = text;
+    return a;
+  }
+
+  function addChip(sb, user, profile) {
     var css = document.createElement('style');
     css.textContent =
-      '.ag-chip{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-dim,#7a8299);white-space:nowrap}' +
+      '.ag-chip{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--fg-dim,#7a8299);white-space:nowrap}' +
       '.ag-email{max-width:180px;overflow:hidden;text-overflow:ellipsis}' +
       '.ag-out{font-size:12px;cursor:pointer}' +
-      '.ag-prof{font-size:12px;color:var(--accent,#7c6cff);text-decoration:none}.ag-prof:hover{text-decoration:underline}' +
+      '.ag-link{font-size:12px;color:var(--accent,#7c6cff);text-decoration:none}.ag-link:hover{text-decoration:underline}' +
       '@media (max-width:700px){.ag-email{display:none}}';
     document.head.appendChild(css);
 
     var chip = document.createElement('div');
     chip.className = 'ag-chip';
-    var email = document.createElement('span');
-    email.className = 'ag-email';
-    email.textContent = user.email || '';
-    email.title = user.email || '';
+    var name = document.createElement('span');
+    name.className = 'ag-email';
+    name.textContent = (profile && profile.full_name) || user.email || '';
+    name.title = user.email || '';
+    chip.appendChild(name);
+    chip.appendChild(link('Profile', 'profile.html', 'ag-link'));
+    if (profile && profile.app_role === 'admin') chip.appendChild(link('Admin', 'admin.html', 'ag-link'));
+
     var out = document.createElement('button');
     out.className = 'ag-out';
     out.type = 'button';
@@ -51,19 +68,7 @@
       await sb.auth.signOut();
       location.replace(new URL('login.html', location.href).href);
     });
-    var prof = document.createElement('a');
-    prof.className = 'ag-prof';
-    prof.href = new URL('profile.html', location.href).href;
-    prof.textContent = 'Profile';
-    chip.appendChild(email);
-    chip.appendChild(prof);
     chip.appendChild(out);
-
-    // Show the user's profile name instead of the raw email once it loads.
-    sb.from('profiles').select('full_name').eq('id', user.id).maybeSingle().then(function (r) {
-      var name = r && r.data && r.data.full_name;
-      if (name) email.textContent = name;
-    });
 
     var mount = document.querySelector('.hdr-right') || document.querySelector('header');
     if (mount) {
@@ -85,11 +90,26 @@
       var session = res.data && res.data.session;
       if (!session) return toLogin();
 
+      var pr = await sb.from('profiles')
+        .select('id,email,full_name,avatar_url,app_role,status')
+        .eq('id', session.user.id).maybeSingle();
+      var profile = pr && pr.data;
+
+      if (profile && profile.status === 'suspended') {
+        await sb.auth.signOut();
+        return toLogin('suspended');
+      }
+
       sb.auth.onAuthStateChange(function (event) {
         if (event === 'SIGNED_OUT') toLogin();
       });
 
-      var ready = function () { addChip(sb, session.user); reveal(); };
+      var ready = function () {
+        addChip(sb, session.user, profile);
+        window.authContext = { sb: sb, user: session.user, profile: profile };
+        window.dispatchEvent(new CustomEvent('auth-ready', { detail: window.authContext }));
+        reveal();
+      };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
       else ready();
     })
