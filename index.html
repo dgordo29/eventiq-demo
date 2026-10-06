@@ -1,0 +1,836 @@
+<title>EventIQ Ops</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0d12;
+  --surface: #12151e;
+  --surface2: #1a1e2a;
+  --surface3: #222736;
+  --border: #252b3b;
+  --accent: #7c6cff;
+  --accent-dim: #3d3580;
+  --teal: #00d4aa;
+  --teal-dim: #00604a;
+  --danger: #ff4757;
+  --danger-dim: #7a1822;
+  --warning: #ffa502;
+  --warning-dim: #7a4f01;
+  --success: #2ed573;
+  --success-dim: #0f4e28;
+  --fg: #e2e5ef;
+  --fg-dim: #7a8299;
+  --fg-muted: #3a3f52;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:'Inter',system-ui,sans-serif;font-size:14px;overflow:hidden}
+a{color:var(--accent)}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;gap:12px;padding:0 20px;height:56px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10}
+.hdr-brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{font-size:18px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.5px;white-space:nowrap}
+.event-name{font-size:12px;color:var(--fg-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-center{flex:1;display:flex;align-items:center;justify-content:center;gap:16px}
+.sim-clock{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;color:var(--fg);letter-spacing:1px}
+.phase-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase}
+.phase-pill.pre{background:var(--fg-muted);color:var(--fg-dim)}
+.phase-pill.doors{background:var(--teal-dim);color:var(--teal)}
+.phase-pill.opening{background:var(--accent-dim);color:var(--accent)}
+.phase-pill.headliner{background:#4a1a00;color:#ff8c42}
+.phase-pill.late{background:#2d0a3a;color:#c77dff}
+.phase-pill.curfew{background:var(--danger-dim);color:var(--danger)}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.hdr-right button{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);cursor:pointer;font-size:12px;font-weight:500;transition:background 0.15s}
+.hdr-right button:hover{background:var(--surface3)}
+.btn-start{border-color:var(--teal)!important;color:var(--teal)!important}
+.btn-start:hover{background:var(--teal-dim)!important}
+.btn-stop{border-color:var(--danger)!important;color:var(--danger)!important}
+.btn-stop:hover{background:var(--danger-dim)!important}
+.speed-wrap{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-dim)}
+.speed-wrap select{background:var(--surface2);border:1px solid var(--border);color:var(--fg);border-radius:4px;padding:4px 6px;font-size:12px;cursor:pointer}
+
+/* TABS */
+.tab-nav{display:flex;gap:0;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto}
+.tab-nav::-webkit-scrollbar{height:3px}
+.tab-nav::-webkit-scrollbar-thumb{background:var(--border)}
+.tab-btn{padding:12px 16px;border:none;background:none;color:var(--fg-dim);cursor:pointer;font-size:12px;font-weight:500;border-bottom:2px solid transparent;white-space:nowrap;transition:color 0.15s,border-color 0.15s}
+.tab-btn:hover{color:var(--fg)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-btn .badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--danger);color:#fff;font-size:9px;font-weight:700;margin-left:5px;vertical-align:middle}
+
+/* MAIN CONTENT */
+.content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.tab-panel{display:none;height:100%;overflow-y:auto;padding:20px}
+.tab-panel.active{display:block}
+.tab-panel::-webkit-scrollbar{width:5px}
+.tab-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* GRID LAYOUTS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+.card-title{font-size:11px;font-weight:600;color:var(--fg-dim);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px}
+.card-big{padding:20px}
+
+/* METRICS */
+.metric-val{font-size:32px;font-weight:800;line-height:1;margin-bottom:4px;font-variant-numeric:tabular-nums}
+.metric-label{font-size:11px;color:var(--fg-dim);text-transform:uppercase;letter-spacing:0.5px}
+.metric-sub{font-size:12px;color:var(--fg-dim);margin-top:4px}
+.metric-sm .metric-val{font-size:22px}
+
+/* PROGRESS BAR */
+.prog-wrap{background:var(--surface3);border-radius:4px;height:8px;overflow:hidden;margin:8px 0}
+.prog-bar{height:100%;border-radius:4px;transition:width 0.6s ease}
+.prog-ok{background:var(--teal)}
+.prog-warn{background:var(--warning)}
+.prog-danger{background:var(--danger)}
+
+/* ALERTS / FEED */
+.alert-item{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:6px;margin-bottom:6px;font-size:12px;border-left:3px solid}
+.alert-item.danger{background:#1a0a0c;border-color:var(--danger)}
+.alert-item.warning{background:#1a1000;border-color:var(--warning)}
+.alert-item.info{background:#0a0e1a;border-color:var(--accent)}
+.alert-item.success{background:#060f0c;border-color:var(--success)}
+.alert-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--fg-muted);white-space:nowrap;padding-top:1px}
+.alert-body{flex:1;color:var(--fg)}
+.alert-dept{font-size:10px;font-weight:600;color:var(--fg-dim);text-transform:uppercase;margin-bottom:2px}
+
+/* COMMS */
+.msg-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.msg-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.msg-meta{font-size:10px;color:var(--fg-dim);margin-bottom:3px}
+.msg-text{font-size:13px;color:var(--fg)}
+
+/* STAT ROWS */
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.stat-row:last-child{border-bottom:none}
+.stat-key{color:var(--fg-dim)}
+.stat-val{font-weight:600;font-variant-numeric:tabular-nums}
+
+/* STATUS BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
+.badge-green{background:var(--success-dim);color:var(--success)}
+.badge-yellow{background:var(--warning-dim);color:var(--warning)}
+.badge-red{background:var(--danger-dim);color:var(--danger)}
+.badge-blue{background:var(--accent-dim);color:var(--accent)}
+.badge-gray{background:var(--surface3);color:var(--fg-dim)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-green{background:var(--success)}
+.dot-yellow{background:var(--warning)}
+.dot-red{background:var(--danger)}
+.dot-blue{background:var(--accent)}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{text-align:left;padding:8px 10px;font-size:10px;font-weight:600;color:var(--fg-dim);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border)}
+.data-table td{padding:8px 10px;border-bottom:1px solid var(--border)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--surface2)}
+
+/* SVG CHART */
+.chart-wrap{overflow:hidden;border-radius:6px}
+
+/* NOISE METER */
+.noise-item{margin-bottom:12px}
+.noise-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.noise-val{font-weight:600;font-variant-numeric:tabular-nums}
+
+/* VIP TABLE */
+.vip-table{width:100%;border-collapse:collapse;font-size:12px}
+.vip-table th{padding:8px 10px;font-size:10px;font-weight:600;color:var(--fg-dim);text-transform:uppercase;border-bottom:1px solid var(--border);text-align:left}
+.vip-table td{padding:8px 10px;border-bottom:1px solid var(--border)}
+
+/* SOCIAL */
+.social-post{padding:10px;background:var(--surface2);border-radius:8px;margin-bottom:8px;font-size:12px}
+.social-post-meta{display:flex;gap:8px;margin-bottom:5px;color:var(--fg-dim);font-size:11px}
+.social-post-text{color:var(--fg);line-height:1.5}
+.sentiment-bar{display:flex;height:20px;border-radius:10px;overflow:hidden;margin:8px 0}
+
+/* SECTION HEADER */
+.section-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.section-title{font-size:13px;font-weight:600}
+.section-sub{font-size:11px;color:var(--fg-dim)}
+
+/* CURFEW BANNER */
+.curfew-banner{display:none;background:var(--danger);color:#fff;padding:12px 20px;font-weight:700;text-align:center;font-size:15px;letter-spacing:1px;animation:pulse 1s infinite alternate}
+@keyframes pulse{from{opacity:1}to{opacity:0.7}}
+
+/* LAYOUT */
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+@media(max-width:600px){
+  .grid-4,.grid-3{grid-template-columns:1fr 1fr}
+  .grid-2{grid-template-columns:1fr}
+  .hdr-right{display:none}
+  .sim-clock{font-size:16px}
+}
+</style>
+
+<div class="app">
+  <!-- CURFEW BANNER -->
+  <div class="curfew-banner" id="curfew-banner">MIDNIGHT CURFEW IN EFFECT — ALL STAGES DARK</div>
+
+  <!-- HEADER -->
+  <header class="hdr">
+    <div class="hdr-brand">
+      <div class="logo">EventIQ</div>
+      <div class="event-name" id="event-display">Sunset Music Festival 2026 · Amphitheater Park</div>
+    </div>
+    <div class="hdr-center">
+      <div class="sim-clock" id="sim-clock">4:00 PM</div>
+      <div class="phase-pill pre" id="phase-pill">Pre-Show</div>
+    </div>
+    <div class="hdr-right">
+      <div class="speed-wrap">
+        <span>Speed</span>
+        <select id="speed-sel">
+          <option value="1">1×</option>
+          <option value="5" selected>5×</option>
+          <option value="15">15×</option>
+          <option value="30">30×</option>
+        </select>
+      </div>
+      <button class="btn-start" id="btn-main" onclick="simToggle()">▶ Start</button>
+      <button onclick="simReset()" style="font-size:12px">↺ Reset</button>
+    </div>
+  </header>
+
+  <!-- TAB NAV -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="cmd">Command Center</button>
+    <button class="tab-btn" data-tab="door">Door &amp; Capacity</button>
+    <button class="tab-btn" data-tab="bar">Beverage &amp; Bar</button>
+    <button class="tab-btn" data-tab="stage">Stage Schedule</button>
+    <button class="tab-btn" data-tab="comms">Team Comms <span class="badge" id="badge-comms" style="display:none">0</span></button>
+    <button class="tab-btn" data-tab="artist">Artist Relations</button>
+    <button class="tab-btn" data-tab="vip">VIP Management</button>
+    <button class="tab-btn" data-tab="compliance">Compliance</button>
+    <button class="tab-btn" data-tab="social">Social Pulse</button>
+  </nav>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- TAB: COMMAND CENTER -->
+    <div class="tab-panel active" id="tab-cmd">
+      <div class="grid-4" style="margin-bottom:16px">
+        <div class="card card-big">
+          <div class="metric-label">Total Occupancy</div>
+          <div class="metric-val" id="cmd-occ" style="color:var(--teal)">0</div>
+          <div class="metric-sub">of 5,000 capacity</div>
+          <div class="prog-wrap"><div class="prog-bar prog-ok" id="cmd-occ-bar" style="width:0%"></div></div>
+        </div>
+        <div class="card card-big">
+          <div class="metric-label">Bar Revenue</div>
+          <div class="metric-val" id="cmd-barrev" style="color:var(--accent)">$0</div>
+          <div class="metric-sub">across 6 locations</div>
+          <div class="metric-sub" id="cmd-barsub" style="margin-top:8px"></div>
+        </div>
+        <div class="card card-big">
+          <div class="metric-label">VIP Revenue</div>
+          <div class="metric-val" id="cmd-viprev" style="color:#ff8c42">$0</div>
+          <div class="metric-sub">bottle service + covers</div>
+        </div>
+        <div class="card card-big">
+          <div class="metric-label">Active Alerts</div>
+          <div class="metric-val" id="cmd-alerts" style="color:var(--danger)">0</div>
+          <div class="metric-sub" id="cmd-alerts-sub">All systems nominal</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Live Alert Feed</div>
+          <div id="cmd-alert-feed" style="max-height:280px;overflow-y:auto">
+            <div style="color:var(--fg-dim);font-size:12px;padding:20px 0;text-align:center">No alerts yet. Start simulation.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Department Status</div>
+          <div id="cmd-dept-status">
+            <div class="stat-row"><span class="stat-key">Gates &amp; Door</span><span class="badge badge-gray" id="ds-door">Standby</span></div>
+            <div class="stat-row"><span class="stat-key">Beverage &amp; Bar</span><span class="badge badge-gray" id="ds-bar">Standby</span></div>
+            <div class="stat-row"><span class="stat-key">Stage &amp; Production</span><span class="badge badge-gray" id="ds-stage">Standby</span></div>
+            <div class="stat-row"><span class="stat-key">Security</span><span class="badge badge-gray" id="ds-security">Standby</span></div>
+            <div class="stat-row"><span class="stat-key">VIP &amp; Hospitality</span><span class="badge badge-gray" id="ds-vip">Standby</span></div>
+            <div class="stat-row"><span class="stat-key">Medical</span><span class="badge badge-green">On Site</span></div>
+            <div class="stat-row"><span class="stat-key">Weather</span><span class="stat-val" id="ds-weather" style="font-size:12px">84°F · Clear</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: DOOR & CAPACITY -->
+    <div class="tab-panel" id="tab-door">
+      <div class="grid-4" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-title">Total In-Venue</div>
+          <div class="metric-val" id="door-occ" style="color:var(--teal)">0</div>
+          <div class="metric-sub">cap: 5,000</div>
+          <div class="prog-wrap"><div class="prog-bar prog-ok" id="door-occ-bar" style="width:0%"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Scan Rate</div>
+          <div class="metric-val" id="door-scanrate">0</div>
+          <div class="metric-sub">guests/min</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Total Scans</div>
+          <div class="metric-val" id="door-total-scans">0</div>
+          <div class="metric-sub">cumulative entries</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Egress Count</div>
+          <div class="metric-val" id="door-egress">0</div>
+          <div class="metric-sub">exits recorded</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Gate Activity</div>
+          <table class="data-table">
+            <thead><tr><th>Gate</th><th>Entries</th><th>Rate /min</th><th>Status</th></tr></thead>
+            <tbody id="gate-table-body">
+              <tr><td>Gate A (Main)</td><td>0</td><td>0</td><td><span class="badge badge-gray">Closed</span></td></tr>
+              <tr><td>Gate B (North)</td><td>0</td><td>0</td><td><span class="badge badge-gray">Closed</span></td></tr>
+              <tr><td>Gate C (South)</td><td>0</td><td>0</td><td><span class="badge badge-gray">Closed</span></td></tr>
+              <tr><td>Gate D (VIP)</td><td>0</td><td>0</td><td><span class="badge badge-gray">Closed</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">Occupancy Timeline</div>
+          <svg id="occ-chart" width="100%" height="160" viewBox="0 0 400 160" preserveAspectRatio="none">
+            <defs><linearGradient id="occ-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00d4aa" stop-opacity="0.4"/><stop offset="100%" stop-color="#00d4aa" stop-opacity="0"/></linearGradient></defs>
+            <path id="occ-chart-area" fill="url(#occ-grad)" d="M0,160 L0,160 Z"/>
+            <path id="occ-chart-line" fill="none" stroke="#00d4aa" stroke-width="2" d="M0,160"/>
+            <line x1="0" y1="16" x2="400" y2="16" stroke="var(--border)" stroke-width="1" stroke-dasharray="4"/>
+            <text x="4" y="13" fill="var(--fg-muted)" font-size="9" font-family="JetBrains Mono">5,000</text>
+            <text x="4" y="85" fill="var(--fg-muted)" font-size="9" font-family="JetBrains Mono">2,500</text>
+            <line x1="0" y1="88" x2="400" y2="88" stroke="var(--border)" stroke-width="1" stroke-dasharray="4"/>
+          </svg>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--fg-muted);margin-top:4px">
+            <span>4:00 PM</span><span>6:00 PM</span><span>8:00 PM</span><span>10:00 PM</span><span>12:00 AM</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: BEVERAGE & BAR -->
+    <div class="tab-panel" id="tab-bar">
+      <div class="grid-4" style="margin-bottom:16px">
+        <div class="card"><div class="card-title">Total Bar Revenue</div><div class="metric-val" id="bar-total-rev" style="color:var(--accent)">$0</div></div>
+        <div class="card"><div class="card-title">Transactions</div><div class="metric-val" id="bar-txns">0</div></div>
+        <div class="card"><div class="card-title">Avg Ticket</div><div class="metric-val" id="bar-avg-ticket">$0</div></div>
+        <div class="card"><div class="card-title">Low Stock Alerts</div><div class="metric-val" id="bar-low-count" style="color:var(--warning)">0</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Bar Locations</div>
+          <table class="data-table">
+            <thead><tr><th>Location</th><th>Revenue</th><th>Txns</th><th>Status</th></tr></thead>
+            <tbody id="bar-locations-body"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">Inventory Levels</div>
+          <div id="bar-inventory"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: STAGE SCHEDULE -->
+    <div class="tab-panel" id="tab-stage">
+      <div class="grid-3" style="margin-bottom:16px">
+        <div class="card"><div class="card-title">Now Playing</div><div class="metric-val metric-sm" id="stage-now" style="color:#ff8c42;font-size:18px">---</div><div class="metric-sub" id="stage-now-sub"></div></div>
+        <div class="card"><div class="card-title">Up Next</div><div class="metric-val metric-sm" id="stage-next" style="font-size:18px">---</div><div class="metric-sub" id="stage-next-sub"></div></div>
+        <div class="card"><div class="card-title">Time to Curfew</div><div class="metric-val metric-sm" id="stage-curfew" style="color:var(--danger);font-size:24px;font-family:'JetBrains Mono',monospace">8:00:00</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Full Schedule</div>
+        <table class="data-table">
+          <thead><tr><th>Time</th><th>Artist</th><th>Stage</th><th>Duration</th><th>Status</th></tr></thead>
+          <tbody id="schedule-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: TEAM COMMS -->
+    <div class="tab-panel" id="tab-comms">
+      <div class="grid-2">
+        <div class="card" style="height:calc(100vh - 180px);display:flex;flex-direction:column">
+          <div class="section-hdr">
+            <div class="section-title">All Channels Feed</div>
+            <div style="display:flex;gap:6px">
+              <span class="badge badge-blue">Security</span>
+              <span class="badge badge-green">Bar</span>
+              <span class="badge" style="background:#2d1a00;color:#ff8c42">Production</span>
+              <span class="badge badge-red">Medical</span>
+            </div>
+          </div>
+          <div id="comms-feed" style="flex:1;overflow-y:auto"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Escalated Issues</div>
+          <div id="comms-escalated">
+            <div style="color:var(--fg-dim);font-size:12px;padding:16px 0;text-align:center">No escalated issues</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: ARTIST RELATIONS -->
+    <div class="tab-panel" id="tab-artist">
+      <div class="grid-4" style="margin-bottom:16px">
+        <div class="card"><div class="card-title">On Site</div><div class="metric-val" id="art-onsite" style="color:var(--success)">0</div></div>
+        <div class="card"><div class="card-title">In Transit</div><div class="metric-val" id="art-transit" style="color:var(--warning)">0</div></div>
+        <div class="card"><div class="card-title">Performed</div><div class="metric-val" id="art-done">0</div></div>
+        <div class="card"><div class="card-title">Open Requests</div><div class="metric-val" id="art-requests" style="color:var(--accent)">0</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Artist Roster</div>
+        <table class="data-table">
+          <thead><tr><th>Artist</th><th>Stage</th><th>Set Time</th><th>Greenroom</th><th>Status</th><th>Notes</th></tr></thead>
+          <tbody id="artist-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: VIP MANAGEMENT -->
+    <div class="tab-panel" id="tab-vip">
+      <div class="grid-4" style="margin-bottom:16px">
+        <div class="card"><div class="card-title">VIP Check-ins</div><div class="metric-val" id="vip-checkins" style="color:var(--teal)">0</div><div class="metric-sub">of 300 capacity</div></div>
+        <div class="card"><div class="card-title">Bottle Orders</div><div class="metric-val" id="vip-orders" style="color:#ff8c42">0</div></div>
+        <div class="card"><div class="card-title">VIP Revenue</div><div class="metric-val" id="vip-rev" style="color:var(--accent)">$0</div></div>
+        <div class="card"><div class="card-title">Open Tables</div><div class="metric-val" id="vip-open">12</div><div class="metric-sub">of 12 sections</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Bottle Service Orders</div>
+          <table class="vip-table">
+            <thead><tr><th>Table</th><th>Order</th><th>Time</th><th>Status</th></tr></thead>
+            <tbody id="vip-orders-table"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">VIP Section Status</div>
+          <div id="vip-sections"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: COMPLIANCE -->
+    <div class="tab-panel" id="tab-compliance">
+      <div class="grid-4" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-title">Curfew Countdown</div>
+          <div class="metric-val" id="comp-curfew" style="color:var(--danger);font-family:'JetBrains Mono',monospace;font-size:26px">8:00:00</div>
+          <div class="metric-sub">Hard stop: midnight</div>
+        </div>
+        <div class="card"><div class="card-title">Noise Warnings</div><div class="metric-val" id="comp-noise-warn" style="color:var(--warning)">0</div></div>
+        <div class="card"><div class="card-title">Permit Status</div><div class="metric-val" id="comp-permits" style="color:var(--success);font-size:16px">Valid</div></div>
+        <div class="card"><div class="card-title">Union Breaks Due</div><div class="metric-val" id="comp-union">0</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Sound Level Monitoring (dB SPL)</div>
+          <div id="comp-noise-bars" style="margin-top:8px"></div>
+          <div style="font-size:11px;color:var(--fg-dim);margin-top:12px">
+            <span style="color:var(--success)">■</span> Normal (&lt;100 dB) &nbsp;
+            <span style="color:var(--warning)">■</span> Elevated (100-110 dB) &nbsp;
+            <span style="color:var(--danger)">■</span> Violation (&gt;110 dB)
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Compliance Log</div>
+          <div id="comp-log" style="max-height:280px;overflow-y:auto">
+            <div style="color:var(--fg-dim);font-size:12px;padding:20px 0;text-align:center">Simulation not started</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: SOCIAL PULSE -->
+    <div class="tab-panel" id="tab-social">
+      <div class="grid-4" style="margin-bottom:16px">
+        <div class="card"><div class="card-title">#SunsetFest2026</div><div class="metric-val" id="soc-mentions" style="color:var(--accent)">0</div><div class="metric-sub">total mentions</div></div>
+        <div class="card"><div class="card-title">Positive Sentiment</div><div class="metric-val" id="soc-positive" style="color:var(--success)">0%</div></div>
+        <div class="card"><div class="card-title">Trending Keywords</div><div id="soc-trending" style="font-size:12px;color:var(--fg-dim);margin-top:4px">---</div></div>
+        <div class="card"><div class="card-title">Viral Posts</div><div class="metric-val" id="soc-viral">0</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Sentiment Overview</div>
+          <div class="sentiment-bar" id="soc-sentiment-bar">
+            <div style="width:0%;background:var(--success);transition:width 0.5s"></div>
+            <div style="width:0%;background:var(--fg-muted);transition:width 0.5s"></div>
+            <div style="width:0%;background:var(--danger);transition:width 0.5s"></div>
+          </div>
+          <div style="display:flex;gap:16px;font-size:11px;color:var(--fg-dim)">
+            <span><span id="soc-pct-pos">0</span>% Positive</span>
+            <span><span id="soc-pct-neu">0</span>% Neutral</span>
+            <span><span id="soc-pct-neg">0</span>% Negative</span>
+          </div>
+          <div style="margin-top:16px">
+            <div class="stat-row"><span class="stat-key">Instagram</span><span class="stat-val" id="soc-ig">0 posts</span></div>
+            <div class="stat-row"><span class="stat-key">TikTok</span><span class="stat-val" id="soc-tt">0 videos</span></div>
+            <div class="stat-row"><span class="stat-key">X / Twitter</span><span class="stat-val" id="soc-tw">0 tweets</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Recent Posts</div>
+          <div id="soc-posts" style="max-height:320px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// SIMULATION ENGINE
+// ─────────────────────────────────────────────
+const CAPACITY = 5000;
+const VIP_CAPACITY = 300;
+const CURFEW_MIN = 480; // 8 hours after 4PM = midnight
+
+const ARTISTS = [
+  {name:'The Midnight Echo',stage:'Main Stage',start:60,dur:60,greenroom:'GR-1',status:'In Transit',notes:'Sound check at 4:30'},
+  {name:'Neon Harbor',stage:'Second Stage',start:30,dur:45,greenroom:'GR-2',status:'On Site',notes:'Rider fulfilled'},
+  {name:'Coastal Drive',stage:'Acoustic Stage',start:15,dur:40,greenroom:'GR-3',status:'On Site',notes:'Opening set'},
+  {name:'Desert Highway',stage:'Main Stage',start:130,dur:75,greenroom:'GR-1',status:'In Transit',notes:'Bus arriving 6PM'},
+  {name:'Static River',stage:'Second Stage',start:90,dur:60,greenroom:'GR-4',status:'In Transit',notes:'VIP meet-and-greet 7PM'},
+  {name:'Luna Crash',stage:'Main Stage',start:220,dur:90,greenroom:'GR-1',status:'Not Arrived',notes:'Headliner — security detail required'},
+  {name:'Prism Collective',stage:'Second Stage',start:165,dur:60,greenroom:'GR-2',status:'In Transit',notes:''},
+  {name:'The Grove',stage:'Acoustic Stage',start:75,dur:45,greenroom:'GR-3',status:'In Transit',notes:'Acoustic-only setup'},
+  {name:'Felix Ray',stage:'Main Stage',start:330,dur:60,greenroom:'GR-5',status:'Not Arrived',notes:'Late addition to bill'},
+  {name:'Velvet Undertow',stage:'Second Stage',start:270,dur:75,greenroom:'GR-4',status:'Not Arrived',notes:'Headliner co-bill'},
+];
+
+const BARS = [
+  {name:'Main Bar',loc:'Center Field',max:50000},
+  {name:'North Bar',loc:'North Lawn',max:40000},
+  {name:'South Bar',loc:'South Entrance',max:35000},
+  {name:'VIP Bar',loc:'VIP Section',max:30000},
+  {name:'East Pavilion Bar',loc:'East Pavilion',max:38000},
+  {name:'Merch & Cider',loc:'West Gate',max:20000},
+];
+
+const SKUs = [
+  {name:'Domestic Beer',unit:'keg',max:80},
+  {name:'Craft Beer',unit:'keg',max:50},
+  {name:'Spirits (well)',unit:'btl',max:120},
+  {name:'Premium Spirits',unit:'btl',max:60},
+  {name:'Wine',unit:'cs',max:40},
+  {name:'NA / Seltzer',unit:'cs',max:90},
+  {name:'Ice',unit:'bag',max:200},
+];
+
+const COMMS_SCRIPT = [
+  {at:0,dept:'Security',color:'#7c6cff',msg:'All security staff report to assigned posts. Gates open in 60 minutes.'},
+  {at:5,dept:'Bar',color:'#2ed573',msg:'Main Bar fully stocked and ready. POS terminals online.'},
+  {at:58,dept:'Production',color:'#ff8c42',msg:'Gates opening in 2 minutes. All teams confirm ready status.'},
+  {at:60,dept:'Security',color:'#7c6cff',msg:'Gates A, B, C now open. Gate D (VIP) open. Steady flow, no issues.'},
+  {at:75,dept:'Bar',color:'#2ed573',msg:'First bar rush hitting Main Bar. Volume picking up. All good.'},
+  {at:90,dept:'Medical',color:'#ff4757',msg:'Minor heat exhaustion near Gate B treated on site. Patient stable.'},
+  {at:120,dept:'Production',color:'#ff8c42',msg:'Main Stage sound check complete. All systems go for Desert Highway.'},
+  {at:150,dept:'Security',color:'#7c6cff',msg:'Crowd density at Main Stage at 70%. Holding perimeter well.'},
+  {at:165,dept:'Bar',color:'#2ed573',msg:'Craft beer running low at North Bar. Requesting keg replacement.'},
+  {at:180,dept:'Production',color:'#ff8c42',msg:'Luna Crash team confirmed on site. Greenroom 1 prepped.'},
+  {at:200,dept:'Security',color:'#7c6cff',msg:'Occupancy at 90% — Gate B queue thinning. No capacity issues.'},
+  {at:220,dept:'Production',color:'#ff8c42',msg:'Main Stage headliner set starting NOW. All hands on deck.'},
+  {at:250,dept:'Medical',color:'#ff4757',msg:'Two alcohol-related assists near south lawn, both transported to first aid.'},
+  {at:270,dept:'Bar',color:'#2ed573',msg:'North and South bars seeing record velocity. Spirits inventory at 40%.'},
+  {at:300,dept:'Security',color:'#7c6cff',msg:'Peak occupancy. All crowd control protocols engaged. Exits clear.'},
+  {at:330,dept:'Production',color:'#ff8c42',msg:'Luna Crash encore complete. Felix Ray set up in 30 min.'},
+  {at:360,dept:'Bar',color:'#2ed573',msg:'Last call prep in 60 minutes. Reducing ice orders.'},
+  {at:390,dept:'Security',color:'#7c6cff',msg:'Crowd thinning. Egress moving well. Post-show protocol ready.'},
+  {at:420,dept:'Production',color:'#ff8c42',msg:'CURFEW in 60 minutes. All stages must cut at midnight.'},
+  {at:450,dept:'Bar',color:'#2ed573',msg:'Last call in 10 minutes. All bar managers confirm.'},
+  {at:460,dept:'Security',color:'#7c6cff',msg:'Last call completed. Orderly crowd movement toward exits.'},
+  {at:478,dept:'Production',color:'#ff4757',msg:'CURFEW IN 2 MINUTES. All stages shutting down. Excellent show!'},
+  {at:480,dept:'Production',color:'#ff4757',msg:'MIDNIGHT CURFEW. All stages dark. Event complete. Outstanding night.'},
+];
+
+const VIP_ORDERS_SCRIPT = [
+  {at:65,table:'VIP-A1',order:'2× Patron Reposado + mixer',amount:580},
+  {at:90,table:'VIP-B3',order:'Dom Pérignon 2015 + 4 glasses',amount:1200},
+  {at:120,table:'VIP-A2',order:'1× Grey Goose magnum + mixer',amount:740},
+  {at:145,table:'VIP-C1',order:'Cristal + 6 glasses + fruit',amount:2800},
+  {at:180,table:'VIP-B1',order:'2× Macallan 18 + charcuterie',amount:920},
+  {at:210,table:'VIP-A3',order:'Ace of Spades + 8 glasses',amount:3500},
+  {at:240,table:'VIP-D2',order:'3× Casamigos tequila + mixers',amount:870},
+  {at:280,table:'VIP-C2',order:'Moët Rosé × 3 + sparklers',amount:1100},
+  {at:320,table:'VIP-B2',order:'Patrón × 2 + custom mixer',amount:660},
+  {at:370,table:'VIP-A4',order:'Belvedere + Red Bull package',amount:480},
+];
+
+const SOCIAL_POSTS_SCRIPT = [
+  {at:10,platform:'Instagram',user:'@festivalgirl',text:'Gates just opened at #SunsetFest2026! Vibes already immaculate 🌅',likes:42},
+  {at:30,platform:'TikTok',user:'@concertking',text:'The crowd energy is UNREAL #SunsetFest2026 #festival',likes:1800},
+  {at:65,platform:'X',user:'@musichead',text:'Coastal Drive absolutely killing it on the acoustic stage #SunsetFest2026',likes:230},
+  {at:100,platform:'Instagram',user:'@vibes.only',text:'VIP section is something else tonight 🍾 #SunsetFest2026',likes:890},
+  {at:130,platform:'TikTok',user:'@festlife22',text:'Desert Highway just walked out and the crowd went INSANE 😭 #SunsetFest2026',likes:12000},
+  {at:170,platform:'X',user:'@reviewsound',text:'Sound quality at Main Stage is flawless tonight. Engineering on point. #SunsetFest2026',likes:445},
+  {at:220,platform:'Instagram',user:'@lunacrashfan',text:'SHE IS ON STAGE!!! Luna Crash opening with "Static Blue" 🔥🔥🔥 #SunsetFest2026',likes:5600},
+  {at:240,platform:'TikTok',user:'@festclips',text:'This Luna Crash breakdown is hitting different under these lights #SunsetFest2026 #viral',likes:48000},
+  {at:300,platform:'X',user:'@festreviewer',text:'Peak of the night right now. Main Stage at capacity. #SunsetFest2026 is one for the books',likes:1200},
+  {at:350,platform:'Instagram',user:'@photog_jay',text:'Captured the most incredible shot tonight. Stage lights + smoke = 🎯 #SunsetFest2026',likes:3400},
+  {at:400,platform:'TikTok',user:'@nighlife_vibes',text:'End of the night energy still going strong #SunsetFest2026',likes:6700},
+  {at:450,platform:'X',user:'@eventgoer',text:'What a night. #SunsetFest2026 was absolutely flawless top to bottom. See you next year 🙌',likes:980},
+];
+
+const ALERTS_SCRIPT = [
+  {at:85,type:'warning',dept:'Medical',msg:'Heat exhaustion case near Gate B. EMS en route.'},
+  {at:150,type:'info',dept:'Bar',msg:'Craft keg inventory at 30% at North Bar. Reorder initiated.'},
+  {at:165,type:'warning',dept:'Security',msg:'Queue buildup at Gate A exceeding 200 persons. Gate B divert active.'},
+  {at:200,type:'danger',dept:'Security',msg:'Occupancy at 95% — capacity threshold triggered.'},
+  {at:240,type:'warning',dept:'Compliance',msg:'Main Stage dB reading 106. Approaching limit.'},
+  {at:250,type:'danger',dept:'Medical',msg:'Two alcohol assists transported to first aid. Non-critical.'},
+  {at:300,type:'info',dept:'Bar',msg:'Spirits (well) at 20% across 3 bars. Last call strategy engaged.'},
+  {at:360,type:'info',dept:'Stage',msg:'Luna Crash set complete. Changeover in progress.'},
+  {at:420,type:'warning',dept:'Compliance',msg:'60 minutes to curfew. All stages notified.'},
+  {at:470,type:'danger',dept:'Compliance',msg:'10 minutes to curfew. Hard stop midnight.'},
+];
+
+// ─── STATE ───
+let S = {
+  elapsed: 0, running: false, speed: 5, intervalId: null,
+  occupancy: 0, totalScans: 0, egress: 0,
+  gateScans: [0,0,0,0], gateRates: [0,0,0,0],
+  barRev: BARS.map(()=>0), barTxns: BARS.map(()=>0),
+  inventory: SKUs.map(s=>s.max),
+  vipCheckins: 0, vipRev: 0,
+  vipOrders: [],
+  alerts: [],
+  commsLog: [],
+  socialPosts: [],
+  noiseDb: [88, 82, 76], noiseWarn: 0,
+  artists: ARTISTS.map(a=>({...a})),
+  artRequests: 3,
+  socialMentions: 0, socialPositive: 75, socialNeutral: 15, socialNegative: 10,
+  ig: 0, tt: 0, tw: 0, viral: 0,
+  sectionsOccupied: [false,false,false,false,false,false,false,false,false,false,false,false],
+  commsUnread: 0,
+  occHistory: [],
+};
+function resetState(){S={elapsed:0,running:false,speed:parseInt(document.getElementById('speed-sel').value)||5,intervalId:null,occupancy:0,totalScans:0,egress:0,gateScans:[0,0,0,0],gateRates:[0,0,0,0],barRev:BARS.map(()=>0),barTxns:BARS.map(()=>0),inventory:SKUs.map(s=>s.max),vipCheckins:0,vipRev:0,vipOrders:[],alerts:[],commsLog:[],socialPosts:[],noiseDb:[88,82,76],noiseWarn:0,artists:ARTISTS.map(a=>({...a})),artRequests:3,socialMentions:0,socialPositive:75,socialNeutral:15,socialNegative:10,ig:0,tt:0,tw:0,viral:0,sectionsOccupied:Array(12).fill(false),commsUnread:0,occHistory:[]}}
+
+// ─── HELPERS ───
+function fmt$(n){return '$'+Math.round(n).toLocaleString()}
+function fmtN(n){return Math.round(n).toLocaleString()}
+function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function clk(e){const t=960+e;const h=Math.floor(t/60)%24;const m=t%60;const ap=h>=12?'PM':'AM';const dh=h===0?12:h>12?h-12:h;return `${dh}:${String(m).padStart(2,'0')} ${ap}`}
+function phase(e){if(e<60)return['Pre-Show','pre'];if(e<120)return['Doors Open','doors'];if(e<240)return['Opening Acts','opening'];if(e<360)return['Headliner','headliner'];if(e<420)return['Late Night','late'];return['Curfew','curfew']}
+function curfewCountdown(e){const rem=Math.max(0,CURFEW_MIN-e)*60;const h=Math.floor(rem/3600);const m=Math.floor((rem%3600)/60);const s=rem%60;return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}
+function occCurve(e){if(e<60)return Math.round(e*10+rand(-50,50));const k=0.018;const mid=210;const base=4800/(1+Math.exp(-k*(e-mid)));return Math.min(4900,Math.max(0,Math.round(base+rand(-30,30))))}
+
+// ─── TICK ───
+function tick(){
+  if(!S.running||S.elapsed>=CURFEW_MIN)return;
+  S.elapsed=Math.min(S.elapsed+S.speed,CURFEW_MIN);
+
+  // occupancy
+  const targetOcc=occCurve(S.elapsed);
+  const diff=targetOcc-S.occupancy;
+  if(diff>0){const scans=Math.min(diff,rand(Math.ceil(diff*0.4),Math.ceil(diff*0.8)));S.totalScans+=scans;S.occupancy+=scans;// spread across gates
+  const gw=[0.35,0.28,0.22,0.15];gw.forEach((w,i)=>{const gs=Math.round(scans*w+rand(-2,2));S.gateScans[i]+=Math.max(0,gs);S.gateRates[i]=Math.round(gs/S.speed*60)});}
+  else if(diff<0){S.egress+=Math.abs(diff);S.occupancy=Math.max(0,S.occupancy+diff);}
+  S.occHistory.push(S.occupancy);
+
+  // bar revenue
+  const spendRate=S.elapsed>60&&S.elapsed<420?0.15:0.05;
+  BARS.forEach((_,i)=>{const txn=rand(0,Math.round(S.occupancy/600*spendRate*S.speed));if(txn>0){S.barTxns[i]+=txn;S.barRev[i]+=txn*(rand(12,28));}});
+  // inventory depletion
+  S.inventory=S.inventory.map((v,i)=>{const rate=(S.elapsed>60&&S.elapsed<420)?SKUs[i].max/300:SKUs[i].max/600;return Math.max(0,v-rate*S.speed+rand(-1,1));});
+
+  // VIP checkins
+  if(S.elapsed>60&&S.vipCheckins<VIP_CAPACITY){const add=rand(0,Math.round(S.speed*0.3));S.vipCheckins=Math.min(VIP_CAPACITY,S.vipCheckins+add);}
+
+  // scripted VIP orders
+  VIP_ORDERS_SCRIPT.forEach(o=>{if(S.elapsed>=o.at&&!S.vipOrders.find(x=>x.table===o.table&&x.order===o.order)){S.vipOrders.unshift({...o,status:'Delivered',time:clk(o.at)});S.vipRev+=o.amount;}});
+  const openSec=S.vipOrders.length;S.sectionsOccupied=Array(12).fill(false).map((_,i)=>i<Math.min(12,openSec));
+
+  // comms
+  COMMS_SCRIPT.forEach(c=>{if(S.elapsed>=c.at&&!S.commsLog.find(x=>x.msg===c.msg)){S.commsLog.unshift({...c,time:clk(c.at)});S.commsUnread++;}});
+
+  // alerts
+  ALERTS_SCRIPT.forEach(a=>{if(S.elapsed>=a.at&&!S.alerts.find(x=>x.msg===a.msg)){S.alerts.unshift({...a,time:clk(a.at)});}});
+
+  // social
+  SOCIAL_POSTS_SCRIPT.forEach(p=>{if(S.elapsed>=p.at&&!S.socialPosts.find(x=>x.text===p.text)){S.socialPosts.unshift({...p,time:clk(p.at)});S.socialMentions+=rand(50,300);if(p.platform==='Instagram')S.ig++;else if(p.platform==='TikTok')S.tt++;else S.tw++;if(p.likes>10000)S.viral++;}});
+  S.socialMentions+=rand(0,Math.round(S.elapsed>60?S.speed*2:0));
+  if(S.elapsed>60)S.socialPositive=Math.min(92,S.socialPositive+rand(0,1));
+
+  // noise
+  S.noiseDb=[88+rand(-3,8)+(S.elapsed>220&&S.elapsed<330?8:0),82+rand(-3,5),76+rand(-2,4)];
+  S.noiseDb.forEach(db=>{if(db>105)S.noiseWarn++;});
+
+  // artist status
+  S.artists.forEach(a=>{
+    if(S.elapsed>=a.start-30&&a.status==='In Transit')a.status='On Site';
+    if(S.elapsed>=a.start&&a.status==='On Site')a.status='On Stage';
+    if(S.elapsed>=a.start+a.dur&&a.status==='On Stage')a.status='Completed';
+  });
+
+  if(S.elapsed>=CURFEW_MIN){S.running=false;clearInterval(S.intervalId);document.getElementById('curfew-banner').style.display='block';document.getElementById('btn-main').textContent='✓ Event Complete';document.getElementById('btn-main').disabled=true;}
+
+  render();
+}
+
+// ─── RENDER ───
+function render(){
+  const e=S.elapsed;
+  // clock & phase
+  document.getElementById('sim-clock').textContent=clk(e);
+  const [phLabel,phClass]=phase(e);
+  const pp=document.getElementById('phase-pill');
+  pp.textContent=phLabel;pp.className='phase-pill '+phClass;
+  const curfStr=curfewCountdown(e);
+
+  // Command Center
+  document.getElementById('cmd-occ').textContent=fmtN(S.occupancy);
+  const op=S.occupancy/CAPACITY*100;
+  const ob=document.getElementById('cmd-occ-bar');
+  ob.style.width=op+'%';ob.className='prog-bar '+(op>95?'prog-danger':op>80?'prog-warn':'prog-ok');
+  const totalBarRev=S.barRev.reduce((a,b)=>a+b,0);
+  document.getElementById('cmd-barrev').textContent=fmt$(totalBarRev);
+  document.getElementById('cmd-barsub').textContent=fmtN(S.barTxns.reduce((a,b)=>a+b,0))+' transactions';
+  document.getElementById('cmd-viprev').textContent=fmt$(S.vipRev);
+  document.getElementById('cmd-alerts').textContent=S.alerts.length;
+  document.getElementById('cmd-alerts-sub').textContent=S.alerts.length?S.alerts[0].msg:'All systems nominal';
+  // alert feed
+  const feed=document.getElementById('cmd-alert-feed');
+  if(S.alerts.length){feed.innerHTML=S.alerts.slice(0,10).map(a=>`<div class="alert-item ${a.type}"><div class="alert-time">${a.time}</div><div class="alert-body"><div class="alert-dept">${a.dept}</div>${a.msg}</div></div>`).join('');}
+  // dept status
+  if(e>=60){document.getElementById('ds-door').textContent='Active';document.getElementById('ds-door').className='badge badge-green';}
+  if(e>=5){document.getElementById('ds-bar').textContent='Active';document.getElementById('ds-bar').className='badge badge-green';}
+  if(e>=55){document.getElementById('ds-stage').textContent='Active';document.getElementById('ds-stage').className='badge badge-green';}
+  if(e>=0){document.getElementById('ds-security').textContent='Active';document.getElementById('ds-security').className='badge badge-green';}
+  if(e>=60){document.getElementById('ds-vip').textContent='Active';document.getElementById('ds-vip').className='badge badge-green';}
+
+  // Door & Capacity
+  document.getElementById('door-occ').textContent=fmtN(S.occupancy);
+  const dp=S.occupancy/CAPACITY*100;
+  const db=document.getElementById('door-occ-bar');
+  db.style.width=dp+'%';db.className='prog-bar '+(dp>95?'prog-danger':dp>80?'prog-warn':'prog-ok');
+  const avgRate=S.gateRates.reduce((a,b)=>a+b,0);
+  document.getElementById('door-scanrate').textContent=fmtN(avgRate);
+  document.getElementById('door-total-scans').textContent=fmtN(S.totalScans);
+  document.getElementById('door-egress').textContent=fmtN(S.egress);
+  const gNames=['Gate A (Main)','Gate B (North)','Gate C (South)','Gate D (VIP)'];
+  const gOpen=e>=60;
+  document.getElementById('gate-table-body').innerHTML=gNames.map((n,i)=>`<tr><td>${n}</td><td>${fmtN(S.gateScans[i])}</td><td>${fmtN(S.gateRates[i])}</td><td><span class="badge ${gOpen?'badge-green':'badge-gray'}">${gOpen?'Open':'Closed'}</span></td></tr>`).join('');
+  // occ chart
+  if(S.occHistory.length>1){const pts=S.occHistory;const w=400;const h=160;const pad=16;const xScale=w/CURFEW_MIN;const yScale=(h-pad*2)/CAPACITY;const points=pts.map((v,i)=>`${i*xScale},${h-pad-v*yScale}`);const lineD='M'+points.join(' L');const areaD='M0,'+(h-pad)+' L'+points.join(' L')+' L'+(pts.length-1)*xScale+','+(h-pad)+' Z';document.getElementById('occ-chart-line').setAttribute('d',lineD);document.getElementById('occ-chart-area').setAttribute('d',areaD);}
+
+  // Bar
+  const bTotalRev=S.barRev.reduce((a,b)=>a+b,0);
+  const bTotalTxn=S.barTxns.reduce((a,b)=>a+b,0);
+  document.getElementById('bar-total-rev').textContent=fmt$(bTotalRev);
+  document.getElementById('bar-txns').textContent=fmtN(bTotalTxn);
+  document.getElementById('bar-avg-ticket').textContent=bTotalTxn?fmt$(bTotalRev/bTotalTxn):'$0';
+  const lowCount=S.inventory.filter((v,i)=>v/SKUs[i].max<0.2).length;
+  document.getElementById('bar-low-count').textContent=lowCount;
+  document.getElementById('bar-locations-body').innerHTML=BARS.map((b,i)=>{const st=S.barRev[i]>0?'badge-green':'badge-gray';const sl=S.barRev[i]>0?'Active':'Standby';return `<tr><td>${b.name}<br><small style="color:var(--fg-dim)">${b.loc}</small></td><td>${fmt$(S.barRev[i])}</td><td>${fmtN(S.barTxns[i])}</td><td><span class="badge ${st}">${sl}</span></td></tr>`;}).join('');
+  document.getElementById('bar-inventory').innerHTML=SKUs.map((s,i)=>{const pct=S.inventory[i]/s.max*100;const cls=pct<20?'prog-danger':pct<40?'prog-warn':'prog-ok';const bcls=pct<20?'badge-red':pct<40?'badge-yellow':'badge-green';return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${s.name}</span><span class="badge ${bcls}">${Math.round(pct)}%</span></div><div class="prog-wrap"><div class="prog-bar ${cls}" style="width:${pct}%"></div></div></div>`;}).join('');
+
+  // Stage
+  const nowPlaying=S.artists.filter(a=>a.status==='On Stage');
+  const upcoming=S.artists.filter(a=>a.status!=='On Stage'&&a.status!=='Completed'&&a.start>e).sort((a,b)=>a.start-b.start);
+  document.getElementById('stage-now').textContent=nowPlaying.length?nowPlaying.map(a=>a.name).join(', '):'No act on stage';
+  document.getElementById('stage-now-sub').textContent=nowPlaying.length?nowPlaying.map(a=>a.stage).join(' · '):'';
+  document.getElementById('stage-next').textContent=upcoming.length?upcoming[0].name:'No more acts';
+  document.getElementById('stage-next-sub').textContent=upcoming.length?clk(upcoming[0].start)+' · '+upcoming[0].stage:'';
+  document.getElementById('stage-curfew').textContent=curfStr;
+  document.getElementById('schedule-body').innerHTML=ARTISTS.sort((a,b)=>a.start-b.start).map(a=>{const st=a.status==='On Stage'?'badge-blue':a.status==='Completed'?'badge-green':a.status==='On Site'?'badge-yellow':'badge-gray';return `<tr><td style="font-family:'JetBrains Mono',monospace">${clk(a.start)}</td><td><strong>${a.name}</strong></td><td>${a.stage}</td><td>${a.dur} min</td><td><span class="badge ${st}">${a.status}</span></td></tr>`;}).join('');
+
+  // Comms
+  const commsB=document.getElementById('badge-comms');
+  if(S.commsUnread>0){commsB.style.display='inline-flex';commsB.textContent=S.commsUnread;}else{commsB.style.display='none';}
+  document.getElementById('comms-feed').innerHTML=S.commsLog.slice(0,30).map(c=>{const colors={Security:'var(--accent)',Bar:'var(--success)',Production:'#ff8c42',Medical:'var(--danger)'};const col=colors[c.dept]||'var(--fg-dim)';return `<div class="msg-item"><div class="msg-avatar" style="background:${col}22;color:${col}">${c.dept[0]}</div><div><div class="msg-meta">${c.dept} · ${c.time}</div><div class="msg-text">${c.msg}</div></div></div>`;}).join('');
+  const esc=S.alerts.filter(a=>a.type==='danger');
+  document.getElementById('comms-escalated').innerHTML=esc.length?esc.map(a=>`<div class="alert-item danger"><div class="alert-time">${a.time}</div><div class="alert-body"><div class="alert-dept">${a.dept}</div>${a.msg}</div></div>`).join(''):'<div style="color:var(--fg-dim);font-size:12px;padding:16px 0;text-align:center">No escalated issues</div>';
+
+  // Artist
+  const onsite=S.artists.filter(a=>a.status==='On Site'||a.status==='On Stage').length;
+  const transit=S.artists.filter(a=>a.status==='In Transit').length;
+  const done=S.artists.filter(a=>a.status==='Completed').length;
+  document.getElementById('art-onsite').textContent=onsite;
+  document.getElementById('art-transit').textContent=transit;
+  document.getElementById('art-done').textContent=done;
+  document.getElementById('art-requests').textContent=S.artRequests;
+  document.getElementById('artist-table').innerHTML=S.artists.map(a=>{const st=a.status==='On Stage'?'badge-blue':a.status==='Completed'?'badge-green':a.status==='On Site'?'badge-yellow':a.status==='In Transit'?'badge-yellow':'badge-gray';return `<tr><td><strong>${a.name}</strong></td><td>${a.stage}</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px">${clk(a.start)}</td><td>${a.greenroom}</td><td><span class="badge ${st}">${a.status}</span></td><td style="color:var(--fg-dim);font-size:11px">${a.notes}</td></tr>`;}).join('');
+
+  // VIP
+  document.getElementById('vip-checkins').textContent=fmtN(S.vipCheckins);
+  document.getElementById('vip-orders').textContent=S.vipOrders.length;
+  document.getElementById('vip-rev').textContent=fmt$(S.vipRev);
+  document.getElementById('vip-open').textContent=12-S.sectionsOccupied.filter(Boolean).length;
+  document.getElementById('vip-orders-table').innerHTML=S.vipOrders.slice(0,8).map(o=>`<tr><td style="font-family:'JetBrains Mono',monospace">${o.table}</td><td>${o.order}</td><td>${o.time}</td><td><span class="badge badge-green">${o.status}</span></td></tr>`).join('')||'<tr><td colspan="4" style="color:var(--fg-dim);text-align:center;padding:16px">No orders yet</td></tr>';
+  const sectionNames=['A1','A2','A3','A4','B1','B2','B3','C1','C2','C3','D1','D2'];
+  document.getElementById('vip-sections').innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">${sectionNames.map((n,i)=>`<div style="background:var(--surface2);border:1px solid ${S.sectionsOccupied[i]?'var(--accent)':'var(--border)'};border-radius:6px;padding:10px;text-align:center"><div style="font-weight:600;font-size:12px;color:${S.sectionsOccupied[i]?'var(--accent)':'var(--fg-dim)'}">VIP-${n}</div><div style="font-size:10px;color:var(--fg-dim);margin-top:4px">${S.sectionsOccupied[i]?'Occupied':'Open'}</div></div>`).join('')}</div>`;
+
+  // Compliance
+  document.getElementById('comp-curfew').textContent=curfStr;
+  document.getElementById('comp-noise-warn').textContent=S.noiseWarn;
+  document.getElementById('comp-union').textContent=e>120&&e<420?Math.max(0,Math.floor((e-120)/90)):0;
+  const stageNames=['Main Stage','Second Stage','Acoustic Stage'];
+  document.getElementById('comp-noise-bars').innerHTML=stageNames.map((sn,i)=>{const db=S.noiseDb[i];const cls=db>110?'prog-danger':db>100?'prog-warn':'prog-ok';const col=db>110?'var(--danger)':db>100?'var(--warning)':'var(--success)';return `<div class="noise-item"><div class="noise-label"><span>${sn}</span><span class="noise-val" style="color:${col}">${Math.round(db)} dB</span></div><div class="prog-wrap"><div class="prog-bar ${cls}" style="width:${Math.min(100,db/120*100)}%"></div></div></div>`;}).join('');
+  const compLogs=ALERTS_SCRIPT.filter(a=>S.elapsed>=a.at&&a.dept==='Compliance');
+  document.getElementById('comp-log').innerHTML=compLogs.length?compLogs.map(a=>`<div class="alert-item ${a.type}"><div class="alert-time">${a.time}</div><div class="alert-body">${a.msg}</div></div>`).join(''):'<div style="color:var(--fg-dim);font-size:12px;padding:12px 0;text-align:center">No compliance events</div>';
+
+  // Social
+  document.getElementById('soc-mentions').textContent=fmtN(S.socialMentions);
+  document.getElementById('soc-positive').textContent=S.socialPositive+'%';
+  const neg=Math.max(2,10-Math.round(S.elapsed/60));const neu=100-S.socialPositive-neg;
+  document.getElementById('soc-pct-pos').textContent=S.socialPositive;
+  document.getElementById('soc-pct-neu').textContent=neu;
+  document.getElementById('soc-pct-neg').textContent=neg;
+  const sentBars=document.getElementById('soc-sentiment-bar').children;
+  sentBars[0].style.width=S.socialPositive+'%';sentBars[1].style.width=neu+'%';sentBars[2].style.width=neg+'%';
+  const trending=e<100?'#SunsetFest2026 #festival #livemusic':e<220?'#CoastalDrive #DesertHighway #SunsetFest2026':e<360?'#LunaCrash #SunsetFest2026 #headliner':'#SunsetFest2026 #bestnight #thankyou';
+  document.getElementById('soc-trending').innerHTML=trending.split(' ').map(t=>`<span style="display:inline-block;background:var(--accent-dim);color:var(--accent);border-radius:12px;padding:2px 8px;font-size:11px;margin:2px">${t}</span>`).join('');
+  document.getElementById('soc-viral').textContent=S.viral;
+  document.getElementById('soc-ig').textContent=fmtN(S.ig)+' posts';
+  document.getElementById('soc-tt').textContent=fmtN(S.tt)+' videos';
+  document.getElementById('soc-tw').textContent=fmtN(S.tw)+' tweets';
+  document.getElementById('soc-posts').innerHTML=S.socialPosts.slice(0,8).map(p=>{const cols={Instagram:'#e1306c',TikTok:'#010101',X:'#1da1f2'};const col=cols[p.platform]||'#888';return `<div class="social-post"><div class="social-post-meta"><span style="color:${col};font-weight:600">${p.platform}</span><span>${p.user}</span><span style="margin-left:auto">${p.time}</span></div><div class="social-post-text">${p.text}</div><div style="font-size:11px;color:var(--fg-dim);margin-top:5px">❤️ ${fmtN(p.likes)} likes</div></div>`;}).join('');
+}
+
+// ─── CONTROLS ───
+function simToggle(){
+  if(S.elapsed>=CURFEW_MIN)return;
+  S.running=!S.running;
+  if(S.running){S.speed=parseInt(document.getElementById('speed-sel').value)||5;S.intervalId=setInterval(tick,1000);document.getElementById('btn-main').textContent='⏸ Pause';document.getElementById('btn-main').className='btn-stop';}
+  else{clearInterval(S.intervalId);document.getElementById('btn-main').textContent='▶ Resume';document.getElementById('btn-main').className='btn-start';}
+}
+function simReset(){
+  clearInterval(S.intervalId);
+  resetState();
+  document.getElementById('btn-main').textContent='▶ Start';
+  document.getElementById('btn-main').className='btn-start';
+  document.getElementById('btn-main').disabled=false;
+  document.getElementById('curfew-banner').style.display='none';
+  // clear dynamic fields
+  document.getElementById('comms-feed').innerHTML='';
+  document.getElementById('cmd-alert-feed').innerHTML='<div style="color:var(--fg-dim);font-size:12px;padding:20px 0;text-align:center">No alerts yet. Start simulation.</div>';
+  document.getElementById('soc-posts').innerHTML='';
+  document.getElementById('gate-table-body').innerHTML=`<tr><td>Gate A (Main)</td><td>0</td><td>0</td><td><span class="badge badge-gray">Closed</span></td></tr><tr><td>Gate B (North)</td><td>0</td><td>0</td><td><span class="badge badge-gray">Closed</span></td></tr><tr><td>Gate C (South)</td><td>0</td><td>0</td><td><span class="badge badge-gray">Closed</span></td></tr><tr><td>Gate D (VIP)</td><td>0</td><td>0</td><td><span class="badge badge-gray">Closed</span></td></tr>`;
+  document.getElementById('occ-chart-line').setAttribute('d','M0,160');
+  document.getElementById('occ-chart-area').setAttribute('d','M0,160 L0,160 Z');
+  render();
+}
+document.getElementById('speed-sel').addEventListener('change',function(){S.speed=parseInt(this.value)||5;if(S.running){clearInterval(S.intervalId);S.intervalId=setInterval(tick,1000);}});
+
+// tab switching
+document.querySelectorAll('.tab-btn').forEach(btn=>{btn.addEventListener('click',function(){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));this.classList.add('active');document.getElementById('tab-'+this.dataset.tab).classList.add('active');if(this.dataset.tab==='comms'){S.commsUnread=0;document.getElementById('badge-comms').style.display='none';}});});
+
+// initial render
+render();
+</script>
