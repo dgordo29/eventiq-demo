@@ -169,12 +169,14 @@ const SUPABASE_KEY = 'sb_publishable_2WEdnHl8YjEzJg1-KAVq3w_3_6RxDAl';
 const APP_HOME = new URL('index.html', location.href).href;
 const LOGIN_URL = new URL('login.html', location.href).href;
 
+// Capture the link type before the client consumes the URL hash (invite and recovery links)
+const LINK_TYPE = new URLSearchParams(location.hash.slice(1)).get('type');
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 });
 
 const $ = (id) => document.getElementById(id);
-let recovering = false;
+let recovering = LINK_TYPE === 'invite' || LINK_TYPE === 'recovery';
 
 function show(name) {
   document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== 'view-' + name; });
@@ -203,7 +205,11 @@ if (new URLSearchParams(location.search).get('reason') === 'suspended') {
 
 // Already signed in? Skip the form.
 const { data: { session } } = await sb.auth.getSession();
-if (session && !location.hash.includes('type=recovery')) goHome();
+if (LINK_TYPE === 'invite') {
+  show('newpw');
+  document.querySelector('#view-newpw h1').textContent = 'Welcome to EventIQ';
+  document.querySelector('#view-newpw .sub').textContent = 'Choose a password to finish setting up your account.';
+} else if (session && LINK_TYPE !== 'recovery') goHome();
 
 $('form-signin').addEventListener('submit', async (e) => {
   e.preventDefault(); hush('msg-signin');

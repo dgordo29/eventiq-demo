@@ -64,6 +64,8 @@ input::placeholder, textarea::placeholder { color: var(--fg-muted); }
 .msg.err { color: var(--danger); background: rgba(255,71,87,0.08); border-color: rgba(255,71,87,0.3); }
 .msg.ok { color: var(--success); background: rgba(46,213,115,0.08); border-color: rgba(46,213,115,0.3); }
 .meta { margin-top: 20px; font-family: var(--mono); font-size: 10px; color: var(--fg-muted); letter-spacing: 0.06em; }
+.pw-section { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
+.role-badge { display: inline-block; margin-left: 8px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); border: 1px solid rgba(0,212,170,0.35); border-radius: 999px; padding: 2px 8px; vertical-align: middle; }
 @media (max-width: 600px) { form { grid-template-columns: 1fr; } .panel { padding: 20px; } }
 </style>
 </head>
@@ -134,6 +136,17 @@ input::placeholder, textarea::placeholder { color: var(--fg-muted); }
     </div>
   </form>
   <div class="meta" id="meta"></div>
+
+  <section class="pw-section">
+    <h2 style="font-size:16px;font-weight:700;margin-bottom:4px">Change password</h2>
+    <p class="sub" style="margin-bottom:16px">At least 8 characters. You'll stay signed in on this device.</p>
+    <form id="pw-form" class="pw-form" novalidate>
+      <div class="msg full" id="pw-msg" hidden></div>
+      <label>New password<input id="pw1" type="password" autocomplete="new-password" placeholder="New password"></label>
+      <label>Confirm new password<input id="pw2" type="password" autocomplete="new-password" placeholder="Type it again"></label>
+      <div class="actions full"><button class="btn" id="pw-save" type="submit">Update password</button></div>
+    </form>
+  </section>
 </main>
 
 <script type="module">
@@ -177,6 +190,11 @@ let profile;
 FIELDS.forEach(f => { if (profile[f] != null) $(f).value = profile[f]; });
 $('bio-count').textContent = ($('bio').value.length) + ' / 1000';
 paintIdentity(profile);
+{
+  const ROLE = { admin: 'Administrator', employee: 'Employee', user: 'User' };
+  const role = (window.authContext && window.authContext.profile && window.authContext.profile.app_role) || profile.app_role;
+  if (role) $('disp-name').after(Object.assign(document.createElement('span'), { className: 'role-badge', textContent: ROLE[role] || role }));
+}
 if (profile.updated_at) $('meta').textContent = 'Last updated ' + new Date(profile.updated_at).toLocaleString();
 document.documentElement.classList.add('ready');
 
@@ -216,6 +234,21 @@ $('file').addEventListener('change', async () => {
   profile = data; paintIdentity(profile); say('Photo updated.', 'ok');
 });
 
+
+$('pw-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const m = $('pw-msg'); m.hidden = true;
+  const show = (t, k = 'err') => { m.textContent = t; m.className = 'msg full ' + k; m.hidden = false; };
+  const a = $('pw1').value, b = $('pw2').value;
+  if (a.length < 8) return show('Use at least 8 characters.');
+  if (a !== b) return show("The two passwords don't match.");
+  $('pw-save').disabled = true;
+  const { error } = await sb.auth.updateUser({ password: a });
+  $('pw-save').disabled = false;
+  if (error) return show(error.message);
+  $('pw1').value = ''; $('pw2').value = '';
+  show('Password updated.', 'ok');
+});
 </script>
 </body>
 </html>

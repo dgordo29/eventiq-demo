@@ -106,7 +106,8 @@
 
       var ready = function () {
         addChip(sb, session.user, profile);
-        window.authContext = { sb: sb, user: session.user, profile: profile };
+        if (profile && profile.app_role) document.documentElement.setAttribute('data-role', profile.app_role);
+        window.authContext = { sb: sb, user: session.user, profile: profile, url: SUPABASE_URL, key: SUPABASE_KEY };
         window.dispatchEvent(new CustomEvent('auth-ready', { detail: window.authContext }));
         reveal();
       };
