@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventIQ Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: one centered panel over a faint stage-grid, matching the ops dashboard tokens */
+:root {
+  --bg: #0b0d12;
+  --surface: #12151e;
+  --surface2: #1a1e2a;
+  --border: #252b3b;
+  --accent: #7c6cff;
+  --accent-dim: #3d3580;
+  --teal: #00d4aa;
+  --danger: #ff4757;
+  --success: #2ed573;
+  --fg: #e2e5ef;
+  --fg-dim: #7a8299;
+  --fg-muted: #3a3f52;
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 14px;
+  display: grid;
+  place-items: center;
+  padding-block: 32px;
+  padding-inline: 16px;
+  background-image:
+    linear-gradient(rgba(124,108,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,108,255,0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.panel {
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 28px 28px;
+}
+.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 28px; }
+.logo {
+  font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--accent), var(--teal));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--fg-dim); text-transform: uppercase; }
+.view[hidden] { display: none; }
+h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; text-wrap: balance; }
+.sub { color: var(--fg-dim); font-size: 13px; line-height: 1.5; margin-bottom: 22px; }
+form { display: grid; gap: 14px; }
+label { display: grid; gap: 6px; font-size: 12px; font-weight: 500; color: var(--fg-dim); }
+input {
+  width: 100%; padding: 11px 12px;
+  background: var(--bg); color: var(--fg);
+  border: 1px solid var(--border); border-radius: 8px;
+  font: inherit; font-size: 14px; outline: none;
+}
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,108,255,0.22); }
+input::placeholder { color: var(--fg-muted); }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.link {
+  background: none; border: none; padding: 0; cursor: pointer;
+  color: var(--accent); font: inherit; font-size: 12px;
+}
+.link:hover { text-decoration: underline; }
+.link:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn {
+  width: 100%; padding: 12px; margin-top: 4px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 8px;
+  font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: 0.55; cursor: wait; }
+.msg { font-size: 13px; line-height: 1.5; padding: 10px 12px; border-radius: 8px; border: 1px solid; }
+.msg[hidden] { display: none; }
+.msg.err { color: var(--danger); background: rgba(255,71,87,0.08); border-color: rgba(255,71,87,0.3); }
+.msg.ok { color: var(--success); background: rgba(46,213,115,0.08); border-color: rgba(46,213,115,0.3); }
+.switch { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); text-align: center; color: var(--fg-dim); font-size: 13px; }
+.switch .link { font-size: 13px; }
+.foot { margin-top: 16px; text-align: center; font-family: var(--mono); font-size: 10px; color: var(--fg-muted); letter-spacing: 0.08em; }
+</style>
+</head>
+<body>
+<main class="panel">
+  <div class="brand">
+    <div class="logo">EventIQ</div>
+    <div class="tag">Ops Console</div>
+  </div>
+
+  <!-- Sign in -->
+  <section class="view" id="view-signin">
+    <h1>Sign in</h1>
+    <p class="sub">Use your work email to open the ops dashboard.</p>
+    <form id="form-signin" novalidate>
+      <div class="msg" id="msg-signin" hidden></div>
+      <label>Email<input id="signin-email" type="email" autocomplete="email" placeholder="you@company.com" required></label>
+      <label>Password<input id="signin-password" type="password" autocomplete="current-password" placeholder="Your password" required></label>
+      <div class="row"><span></span><button type="button" class="link" data-go="reset">Forgot password?</button></div>
+      <button class="btn" id="btn-signin" type="submit">Sign in</button>
+    </form>
+    <div class="switch">New here? <button type="button" class="link" data-go="signup">Create an account</button></div>
+  </section>
+
+  <!-- Create account -->
+  <section class="view" id="view-signup" hidden>
+    <h1>Create your account</h1>
+    <p class="sub">We'll email you a link to confirm your address.</p>
+    <form id="form-signup" novalidate>
+      <div class="msg" id="msg-signup" hidden></div>
+      <label>Full name<input id="signup-name" type="text" autocomplete="name" placeholder="Jordan Lee"></label>
+      <label>Email<input id="signup-email" type="email" autocomplete="email" placeholder="you@company.com" required></label>
+      <label>Password<input id="signup-password" type="password" autocomplete="new-password" placeholder="At least 8 characters" required></label>
+      <button class="btn" id="btn-signup" type="submit">Create account</button>
+    </form>
+    <div class="switch">Already have an account? <button type="button" class="link" data-go="signin">Sign in</button></div>
+  </section>
+
+  <!-- Forgot password -->
+  <section class="view" id="view-reset" hidden>
+    <h1>Reset your password</h1>
+    <p class="sub">Enter your email and we'll send a reset link.</p>
+    <form id="form-reset" novalidate>
+      <div class="msg" id="msg-reset" hidden></div>
+      <label>Email<input id="reset-email" type="email" autocomplete="email" placeholder="you@company.com" required></label>
+      <button class="btn" id="btn-reset" type="submit">Send reset link</button>
+    </form>
+    <div class="switch"><button type="button" class="link" data-go="signin">Back to sign in</button></div>
+  </section>
+
+  <!-- New password (arrives from reset email) -->
+  <section class="view" id="view-newpw" hidden>
+    <h1>Choose a new password</h1>
+    <p class="sub">You'll go straight to the dashboard after saving.</p>
+    <form id="form-newpw" novalidate>
+      <div class="msg" id="msg-newpw" hidden></div>
+      <label>New password<input id="newpw" type="password" autocomplete="new-password" placeholder="At least 8 characters" required></label>
+      <button class="btn" id="btn-newpw" type="submit">Save password</button>
+    </form>
+  </section>
+
+  <!-- Check inbox -->
+  <section class="view" id="view-check" hidden>
+    <h1>Check your inbox</h1>
+    <p class="sub">We sent a confirmation link to <strong id="check-email"></strong>. Open it, then sign in here.</p>
+    <div class="switch"><button type="button" class="link" data-go="signin">Back to sign in</button></div>
+  </section>
+
+  <div class="foot">Secured by Supabase</div>
+</main>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SUPABASE_URL = 'https://eqekhzjhgplkwhliqrvn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_2WEdnHl8YjEzJg1-KAVq3w_3_6RxDAl';
+const APP_HOME = new URL('index.html', location.href).href;
+const LOGIN_URL = new URL('login.html', location.href).href;
+
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+});
+
+const $ = (id) => document.getElementById(id);
+let recovering = false;
+
+function show(name) {
+  document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== 'view-' + name; });
+}
+document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => show(b.dataset.go)));
+
+function say(id, text, kind = 'err') { const m = $(id); m.textContent = text; m.className = 'msg ' + kind; m.hidden = false; }
+function hush(id) { $(id).hidden = true; }
+function busy(id, on) { $(id).disabled = on; }
+
+function goHome() {
+  const next = new URLSearchParams(location.search).get('next');
+  // Only follow same-origin return paths
+  try { const u = new URL(next || APP_HOME, location.href); location.replace(u.origin === location.origin ? u.href : APP_HOME); }
+  catch { location.replace(APP_HOME); }
+}
+
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY') { recovering = true; show('newpw'); return; }
+  if (event === 'SIGNED_IN' && session && !recovering) goHome();
+});
+
+// Already signed in? Skip the form.
+const { data: { session } } = await sb.auth.getSession();
+if (session && !location.hash.includes('type=recovery')) goHome();
+
+$('form-signin').addEventListener('submit', async (e) => {
+  e.preventDefault(); hush('msg-signin');
+  const email = $('signin-email').value.trim(), password = $('signin-password').value;
+  if (!email || !password) return say('msg-signin', 'Enter your email and password.');
+  busy('btn-signin', true);
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  busy('btn-signin', false);
+  if (!error) return goHome();
+  if (/confirm/i.test(error.message)) return say('msg-signin', 'Confirm your email first. Check your inbox for the link we sent.');
+  if (/invalid login/i.test(error.message)) return say('msg-signin', 'That email and password don\'t match. Try again or reset your password.');
+  say('msg-signin', error.message);
+});
+
+$('form-signup').addEventListener('submit', async (e) => {
+  e.preventDefault(); hush('msg-signup');
+  const full_name = $('signup-name').value.trim() || null;
+  const email = $('signup-email').value.trim(), password = $('signup-password').value;
+  if (!email) return say('msg-signup', 'Enter your email.');
+  if (password.length < 8) return say('msg-signup', 'Use at least 8 characters for your password.');
+  busy('btn-signup', true);
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name }, emailRedirectTo: LOGIN_URL } });
+  busy('btn-signup', false);
+  if (error) return say('msg-signup', error.message);
+  if (data.session) return goHome(); // email confirmation turned off
+  $('check-email').textContent = email; show('check');
+});
+
+$('form-reset').addEventListener('submit', async (e) => {
+  e.preventDefault(); hush('msg-reset');
+  const email = $('reset-email').value.trim();
+  if (!email) return say('msg-reset', 'Enter your email.');
+  busy('btn-reset', true);
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: LOGIN_URL });
+  busy('btn-reset', false);
+  if (error) return say('msg-reset', error.message);
+  say('msg-reset', 'Reset link sent. Check your inbox.', 'ok');
+});
+
+$('form-newpw').addEventListener('submit', async (e) => {
+  e.preventDefault(); hush('msg-newpw');
+  const password = $('newpw').value;
+  if (password.length < 8) return say('msg-newpw', 'Use at least 8 characters for your password.');
+  busy('btn-newpw', true);
+  const { error } = await sb.auth.updateUser({ password });
+  busy('btn-newpw', false);
+  if (error) return say('msg-newpw', error.message);
+  say('msg-newpw', 'Password saved. Opening the dashboard.', 'ok');
+  recovering = false; setTimeout(goHome, 900);
+});
+</script>
+</body>
+</html>
